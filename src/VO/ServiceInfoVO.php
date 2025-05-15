@@ -11,10 +11,10 @@ class ServiceInfoVO
         private readonly string $port,
         private readonly int $ipCount,
         private readonly int $connectionCount,
-        private readonly string $uploadRate,
-        private readonly string $downloadRate,
-        private readonly string $cpuUsage,
-        private readonly string $memoryUsage
+        private readonly int $uploadBytes,
+        private readonly int $downloadBytes,
+        private readonly float $cpuUsage,
+        private readonly float $memoryUsage
     ) {
     }
 
@@ -48,22 +48,22 @@ class ServiceInfoVO
         return $this->connectionCount;
     }
 
-    public function getUploadRate(): string
+    public function getUploadBytes(): int
     {
-        return $this->uploadRate;
+        return $this->uploadBytes;
     }
 
-    public function getDownloadRate(): string
+    public function getDownloadBytes(): int
     {
-        return $this->downloadRate;
+        return $this->downloadBytes;
     }
 
-    public function getCpuUsage(): string
+    public function getCpuUsage(): float
     {
         return $this->cpuUsage;
     }
 
-    public function getMemoryUsage(): string
+    public function getMemoryUsage(): float
     {
         return $this->memoryUsage;
     }
@@ -80,10 +80,10 @@ class ServiceInfoVO
             (string)($data[3] ?? ''),
             (int)($data[4] ?? 0),
             (int)($data[5] ?? 0),
-            (string)($data[6] ?? '0.00 KB'),
-            (string)($data[7] ?? '0.00 KB'),
-            (string)($data[8] ?? '0.0%'),
-            (string)($data[9] ?? '0.0%')
+            (int)($data[6] ?? 0),
+            (int)($data[7] ?? 0),
+            (float)($data[8] ?? 0.0),
+            (float)($data[9] ?? 0.0)
         );
     }
     
@@ -99,8 +99,8 @@ class ServiceInfoVO
             $this->port,
             $this->ipCount,
             $this->connectionCount,
-            $this->uploadRate,
-            $this->downloadRate,
+            $this->uploadBytes,
+            $this->downloadBytes,
             $this->cpuUsage,
             $this->memoryUsage
         ];

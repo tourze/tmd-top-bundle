@@ -6,8 +6,8 @@ class NetcardInfoVO
 {
     public function __construct(
         private readonly string $name,
-        private readonly string $uploadRate,
-        private readonly string $downloadRate
+        private readonly int $uploadBytes,
+        private readonly int $downloadBytes
     ) {
     }
 
@@ -16,14 +16,14 @@ class NetcardInfoVO
         return $this->name;
     }
 
-    public function getUploadRate(): string
+    public function getUploadBytes(): int
     {
-        return $this->uploadRate;
+        return $this->uploadBytes;
     }
 
-    public function getDownloadRate(): string
+    public function getDownloadBytes(): int
     {
-        return $this->downloadRate;
+        return $this->downloadBytes;
     }
     
     /**
@@ -33,8 +33,8 @@ class NetcardInfoVO
     {
         return new self(
             $data[0] ?? '',
-            $data[1] ?? '0.00 KB',
-            $data[2] ?? '0.00 KB'
+            (int)($data[1] ?? 0),
+            (int)($data[2] ?? 0)
         );
     }
     
@@ -45,8 +45,8 @@ class NetcardInfoVO
     {
         return [
             $this->name,
-            $this->uploadRate,
-            $this->downloadRate
+            $this->uploadBytes,
+            $this->downloadBytes
         ];
     }
 }

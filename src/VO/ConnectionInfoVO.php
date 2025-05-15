@@ -7,8 +7,8 @@ class ConnectionInfoVO
     public function __construct(
         private readonly string $remoteIp,
         private readonly string $remotePort,
-        private readonly string $uploadRate,
-        private readonly string $downloadRate,
+        private readonly int $uploadBytes,
+        private readonly int $downloadBytes,
         private readonly string $location
     ) {
     }
@@ -23,14 +23,14 @@ class ConnectionInfoVO
         return $this->remotePort;
     }
 
-    public function getUploadRate(): string
+    public function getUploadBytes(): int
     {
-        return $this->uploadRate;
+        return $this->uploadBytes;
     }
 
-    public function getDownloadRate(): string
+    public function getDownloadBytes(): int
     {
-        return $this->downloadRate;
+        return $this->downloadBytes;
     }
 
     public function getLocation(): string
@@ -46,8 +46,8 @@ class ConnectionInfoVO
         return new self(
             (string)($data[0] ?? ''),
             (string)($data[1] ?? ''),
-            (string)($data[2] ?? '0.00 KB'),
-            (string)($data[3] ?? '0.00 KB'),
+            (int)($data[2] ?? 0),
+            (int)($data[3] ?? 0),
             (string)($data[4] ?? '未知')
         );
     }
@@ -60,8 +60,8 @@ class ConnectionInfoVO
         return [
             $this->remoteIp,
             $this->remotePort,
-            $this->uploadRate,
-            $this->downloadRate,
+            $this->uploadBytes,
+            $this->downloadBytes,
             $this->location
         ];
     }

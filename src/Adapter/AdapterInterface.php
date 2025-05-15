@@ -13,28 +13,28 @@ interface AdapterInterface
 {
     /**
      * 获取网卡信息
-     * 
+     *
      * @return Collection<int, NetcardInfoVO>
      */
     public function getNetcardInfo(): Collection;
 
     /**
      * 获取监听服务信息
-     * 
+     *
      * @return Collection<int, ServiceInfoVO>
      */
     public function getServicesInfo(): Collection;
 
     /**
      * 获取连接信息
-     * 
+     *
      * @return Collection<int, ConnectionInfoVO>
      */
     public function getConnectionsInfo(): Collection;
 
     /**
      * 获取进程信息
-     * 
+     *
      * @return Collection<int, ProcessInfoVO>
      */
     public function getProcessesInfo(): Collection;

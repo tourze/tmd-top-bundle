@@ -5,17 +5,17 @@ namespace Tourze\TmdTopBundle\VO;
 class ProcessResourceUsageVO
 {
     public function __construct(
-        private readonly string $cpu,
-        private readonly string $mem
+        private readonly float $cpu,
+        private readonly float $mem
     ) {
     }
 
-    public function getCpu(): string
+    public function getCpu(): float
     {
         return $this->cpu;
     }
 
-    public function getMem(): string
+    public function getMem(): float
     {
         return $this->mem;
     }
@@ -26,8 +26,8 @@ class ProcessResourceUsageVO
     public static function fromArray(array $data): self
     {
         return new self(
-            (string)($data['cpu'] ?? '0.0'),
-            (string)($data['mem'] ?? '0.0')
+            (float)($data['cpu'] ?? 0.0),
+            (float)($data['mem'] ?? 0.0)
         );
     }
     

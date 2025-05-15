@@ -2,334 +2,300 @@
 
 namespace Tourze\TmdTopBundle\Adapter;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Tourze\TmdTopBundle\VO\ConnectionInfoVO;
+use Tourze\TmdTopBundle\VO\NetcardInfoVO;
+use Tourze\TmdTopBundle\VO\ProcessInfoVO;
+use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
+use Tourze\TmdTopBundle\VO\ServiceInfoVO;
+
 class WindowsAdapter extends AbstractAdapter
 {
     /**
      * 获取网卡信息
+     *
+     * @return Collection<int, NetcardInfoVO>
      */
-    public function getNetcardInfo(): array
+    public function getNetcardInfo(): Collection
     {
-        $result = [];
-        
-        // 使用netstat命令获取网络接口统计信息
-        $netstatOutput = $this->executeCommand('netstat -e');
-        
-        // 处理输出结果
-        $interfaces = [];
-        $currentInterface = null;
-        
-        foreach ($netstatOutput as $line) {
-            if (strpos($line, 'Interface') === 0) {
-                // 新网卡开始
-                $currentInterface = trim(str_replace('Interface', '', $line));
-                $interfaces[$currentInterface] = [
-                    'bytes_sent' => 0,
-                    'bytes_recv' => 0,
-                ];
-            } elseif ($currentInterface && preg_match('/^\s+Bytes\s+(\d+)\s+(\d+)/', $line, $matches)) {
-                // 数据行
-                $interfaces[$currentInterface]['bytes_sent'] = (int)$matches[1];
-                $interfaces[$currentInterface]['bytes_recv'] = (int)$matches[2];
-            }
-        }
-        
-        // 如果netstat命令没有返回预期结果，尝试使用WMI
-        if (empty($interfaces)) {
-            $wmiOutput = $this->executeCommand('wmic NIC get Name, BytesSentPersec, BytesReceivedPersec /format:csv');
-            
-            foreach ($wmiOutput as $line) {
-                $parts = str_getcsv($line);
-                if (count($parts) >= 4 && is_numeric($parts[2]) && is_numeric($parts[3])) {
-                    $interfaces[$parts[1]] = [
-                        'bytes_sent' => (int)$parts[2],
-                        'bytes_recv' => (int)$parts[3],
-                    ];
+        $collection = new ArrayCollection();
+
+        // 使用PowerShell获取网卡信息
+        $command = 'powershell.exe "Get-NetAdapter | Select-Object Name, @{Name=\'TxBytes\';Expression={(Get-NetAdapterStatistics -Name $_.Name).SentBytes}}, @{Name=\'RxBytes\';Expression={(Get-NetAdapterStatistics -Name $_.Name).ReceivedBytes}} | ConvertTo-Csv -NoTypeInformation"';
+        $output = $this->executeCommand($command);
+
+        // 跳过CSV头行
+        if (count($output) > 1) {
+            for ($i = 1; $i < count($output); $i++) {
+                $row = str_getcsv($output[$i]);
+                if (count($row) >= 3) {
+                    $name = $row[0];
+                    $txBytes = (int)$row[1];
+                    $rxBytes = (int)$row[2];
+
+                    $netcardInfo = new NetcardInfoVO($name, $txBytes, $rxBytes);
+                    $collection->add($netcardInfo);
                 }
             }
         }
-        
-        // 格式化输出
-        foreach ($interfaces as $name => $data) {
-            $result[] = [
-                $name,
-                $this->formatBytesToKB($data['bytes_sent']),
-                $this->formatBytesToKB($data['bytes_recv']),
-            ];
-        }
-        
-        return $result;
+
+        return $collection;
     }
 
     /**
      * 获取监听服务信息
+     *
+     * @return Collection<int, ServiceInfoVO>
      */
-    public function getServicesInfo(): array
+    public function getServicesInfo(): Collection
     {
-        $result = [];
-        
-        // 使用netstat命令获取监听服务信息
-        $netstatOutput = $this->executeCommand('netstat -ano | findstr LISTENING');
-        
-        // 创建临时表存储PID到进程名的映射
-        $pidToName = $this->getPidToNameMapping();
-        
-        foreach ($netstatOutput as $line) {
+        $collection = new ArrayCollection();
+
+        // 使用netstat获取监听端口信息
+        $command = 'netstat -ano | findstr LISTENING';
+        $output = $this->executeCommand($command);
+
+        $servicesInfo = [];
+
+        foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
             if (count($parts) < 5) {
                 continue;
             }
-            
-            $protocol = $parts[0];
-            $localAddr = $parts[1];
-            $pid = $parts[4];
-            
+
+            [$proto, $localAddr, $foreignAddr, $state, $pid] = $parts;
+
             // 解析IP和端口
-            if (!preg_match('/(.+):(\d+)$/', $localAddr, $matches)) {
-                continue;
-            }
-            
-            $ip = $matches[1] === '0.0.0.0' ? '*' : $matches[1];
-            $port = $matches[2];
-            $serviceName = $pidToName[$pid] ?? 'unknown';
-            
-            // 获取连接信息
-            $connectionInfo = $this->getConnectionInfo($port);
-            
-            // 获取CPU和内存使用情况
-            $cpuMem = $this->getProcessResourceUsage($pid);
-            
-            $result[] = [
+            [$ip, $port] = explode(':', $localAddr);
+            $ip = $ip === '0.0.0.0' ? '*' : $ip;
+
+            // 使用tasklist获取进程名称
+            $processInfo = $this->getProcessNameByPid($pid);
+            $serviceName = $processInfo['name'] ?? 'unknown';
+
+            // 计算IP数和连接数
+            $ipCount = 0;
+            $connCount = 0;
+            $connectionInfo = $this->getConnectionInfoByPort($port);
+            $ipCount = $connectionInfo['ipCount'];
+            $connCount = $connectionInfo['connCount'];
+
+            // 获取进程的CPU和内存使用率
+            $resourceUsage = $this->getProcessResourceUsage($pid);
+
+            $serviceInfo = new ServiceInfoVO(
                 $pid,
                 $serviceName,
                 $ip,
                 $port,
-                $connectionInfo['ipCount'],
-                $connectionInfo['connCount'],
-                '0.00 KB', // 上传速率，实际实现需要监控一段时间
-                '0.00 KB', // 下载速率，实际实现需要监控一段时间
-                $cpuMem['cpu'] . '%',
-                $cpuMem['mem'] . '%',
-            ];
+                $ipCount,
+                $connCount,
+                0, // 上传字节数，实际实现需要监控一段时间
+                0, // 下载字节数，实际实现需要监控一段时间
+                $resourceUsage->getCpu(),
+                $resourceUsage->getMem()
+            );
+
+            $collection->add($serviceInfo);
         }
-        
-        return $result;
+
+        return $collection;
     }
 
     /**
      * 获取连接信息
+     *
+     * @return Collection<int, ConnectionInfoVO>
      */
-    public function getConnectionsInfo(): array
+    public function getConnectionsInfo(): Collection
     {
-        $result = [];
-        
-        // 使用netstat命令获取已建立的连接
-        $netstatOutput = $this->executeCommand('netstat -ano | findstr ESTABLISHED');
-        
-        foreach ($netstatOutput as $line) {
+        $collection = new ArrayCollection();
+
+        // 使用netstat获取已建立的连接
+        $command = 'netstat -ano | findstr ESTABLISHED';
+        $output = $this->executeCommand($command);
+
+        foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
             if (count($parts) < 5) {
                 continue;
             }
-            
-            $remoteAddr = $parts[2];
-            
-            // 解析IP和端口
-            if (!preg_match('/(.+):(\d+)$/', $remoteAddr, $matches)) {
+
+            [$proto, $localAddr, $foreignAddr, $state, $pid] = $parts;
+
+            // 解析远程IP和端口
+            [$remoteIp, $remotePort] = explode(':', $foreignAddr);
+
+            // 排除本地连接
+            if ($remoteIp === '127.0.0.1') {
                 continue;
             }
-            
-            $remoteIp = $matches[1];
-            $remotePort = $matches[2];
-            
-            // 忽略本地回环地址
-            if ($remoteIp === '127.0.0.1' || $remoteIp === '::1') {
-                continue;
-            }
-            
-            $result[] = [
+
+            $connectionInfo = new ConnectionInfoVO(
                 $remoteIp,
                 $remotePort,
-                '1.00 KB', // 上传速率，实际实现需要监控一段时间
-                '1.00 KB', // 下载速率，实际实现需要监控一段时间
-                '未知', // 地理位置需要通过GeoIP服务获取
-            ];
+                1024, // 上传字节数，实际实现需要监控一段时间
+                1024, // 下载字节数，实际实现需要监控一段时间
+                '未知' // 地理位置需要通过GeoIP服务获取
+            );
+
+            $collection->add($connectionInfo);
         }
-        
-        return $result;
+
+        return $collection;
     }
 
     /**
      * 获取进程信息
+     *
+     * @return Collection<int, ProcessInfoVO>
      */
-    public function getProcessesInfo(): array
+    public function getProcessesInfo(): Collection
     {
-        $result = [];
-        
-        // 获取所有进程信息
-        $tasklist = $this->executeCommand('tasklist /FO CSV');
-        
-        // 获取正在使用网络的PID
-        $netstatOutput = $this->executeCommand('netstat -ano | findstr ESTABLISHED');
-        $networkPids = [];
-        
-        foreach ($netstatOutput as $line) {
+        $collection = new ArrayCollection();
+
+        // 获取所有有网络连接的进程列表
+        $command = 'netstat -ano | findstr ESTABLISHED';
+        $output = $this->executeCommand($command);
+
+        $processConnections = [];
+
+        foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) >= 5) {
-                $pid = $parts[4];
-                if (!isset($networkPids[$pid])) {
-                    $networkPids[$pid] = [
-                        'ips' => [],
-                        'connections' => 0,
-                    ];
-                }
-                
-                if (isset($parts[2]) && preg_match('/(.+):(\d+)$/', $parts[2], $matches)) {
-                    $remoteIp = $matches[1];
-                    if (!in_array($remoteIp, $networkPids[$pid]['ips'])) {
-                        $networkPids[$pid]['ips'][] = $remoteIp;
-                    }
-                    $networkPids[$pid]['connections']++;
-                }
-            }
-        }
-        
-        // 处理进程列表
-        foreach ($tasklist as $line) {
-            if (strpos($line, '"') !== 0) {
-                continue;
-            }
-            
-            $parts = str_getcsv($line);
             if (count($parts) < 5) {
                 continue;
             }
-            
-            $name = $parts[0];
-            $pid = str_replace('"', '', $parts[1]);
-            
-            // 只包含有网络连接的进程
-            if (!isset($networkPids[$pid])) {
-                continue;
+
+            [$proto, $localAddr, $foreignAddr, $state, $pid] = $parts;
+
+            // 解析远程IP
+            [$remoteIp, $remotePort] = explode(':', $foreignAddr);
+
+            if (!isset($processConnections[$pid])) {
+                $processInfo = $this->getProcessNameByPid($pid);
+                $processConnections[$pid] = [
+                    'name' => $processInfo['name'] ?? 'unknown',
+                    'ips' => [],
+                    'connections' => 0,
+                ];
             }
-            
-            // 获取CPU和内存使用情况
-            $cpuMem = $this->getProcessResourceUsage($pid);
-            
-            $result[] = [
-                $pid,
-                $name,
-                count($networkPids[$pid]['ips']),
-                $networkPids[$pid]['connections'],
-                '1.00 KB', // 上传速率，实际实现需要监控一段时间
-                '0.00 KB', // 下载速率，实际实现需要监控一段时间
-                $cpuMem['cpu'] . '%',
-                '0.1%',
-            ];
+
+            if (!in_array($remoteIp, $processConnections[$pid]['ips'])) {
+                $processConnections[$pid]['ips'][] = $remoteIp;
+            }
+            $processConnections[$pid]['connections']++;
         }
-        
-        return $result;
+
+        // 获取进程资源使用情况并组装最终结果
+        foreach ($processConnections as $pid => $info) {
+            $resourceUsage = $this->getProcessResourceUsage($pid);
+
+            $processInfo = new ProcessInfoVO(
+                $pid,
+                $info['name'],
+                count($info['ips']),
+                $info['connections'],
+                1024, // 上传字节数，实际实现需要监控一段时间
+                0, // 下载字节数，实际实现需要监控一段时间
+                $resourceUsage->getCpu(),
+                '其他' // 实际应用可能是地区信息
+            );
+
+            $collection->add($processInfo);
+        }
+
+        return $collection;
     }
 
     /**
      * 获取进程的资源使用情况
      */
-    public function getProcessResourceUsage(string $pid): array
+    public function getProcessResourceUsage(string $pid): ProcessResourceUsageVO
     {
-        $result = [
-            'cpu' => '0.0',
-            'mem' => '0.0',
-        ];
-        
-        // 对于Windows，可以使用typeperf或wmic命令
-        $wmicOutput = $this->executeCommand("wmic process where ProcessId=$pid get WorkingSetSize /format:csv");
-        
-        // 内存使用
-        foreach ($wmicOutput as $line) {
-            $parts = str_getcsv($line);
-            if (count($parts) >= 2 && is_numeric($parts[1])) {
-                // 转换为MB并计算百分比
+        $cpu = 0.0;
+        $mem = 0.0;
+
+        // 使用 PowerShell 获取进程 CPU 和内存使用率
+        $command = "powershell.exe \"Get-Process -Id $pid | Select-Object CPU, @{Name='WorkingSetMB';Expression={\$_.WorkingSet/1MB}} | ConvertTo-Csv -NoTypeInformation\"";
+        $output = $this->executeCommand($command);
+
+        if (count($output) > 1) {
+            $row = str_getcsv($output[1]);
+            if (count($row) >= 2) {
+                $cpu = (float)$row[0] / 100; // 转换为百分比
                 $totalMem = $this->getTotalMemory();
-                $memBytes = (float)$parts[1];
-                $memPercent = $totalMem > 0 ? (($memBytes / $totalMem) * 100) : 0;
-                $result['mem'] = number_format($memPercent, 1);
-                break;
+                $usedMem = (float)$row[1];
+                $mem = $totalMem > 0 ? ($usedMem / $totalMem) * 100 : 0;
             }
         }
-        
-        // CPU使用更复杂，这里提供一个简化的估算
-        $result['cpu'] = '0.0'; // 在Windows中准确获取单个进程的CPU使用率需要更复杂的逻辑
-        
-        return $result;
+
+        return new ProcessResourceUsageVO($cpu, $mem);
     }
-    
+
     /**
-     * 获取PID到进程名称的映射
+     * 通过PID获取进程名称
      */
-    private function getPidToNameMapping(): array
+    private function getProcessNameByPid(string $pid): array
     {
-        $result = [];
-        $tasklist = $this->executeCommand('tasklist /FO CSV');
-        
-        foreach ($tasklist as $line) {
-            if (strpos($line, '"') !== 0) {
-                continue;
-            }
-            
-            $parts = str_getcsv($line);
-            if (count($parts) >= 2) {
-                $name = $parts[0];
-                $pid = str_replace('"', '', $parts[1]);
-                $result[$pid] = $name;
+        $command = "tasklist /FI \"PID eq $pid\" /FO CSV /NH";
+        $output = $this->executeCommand($command);
+
+        $result = [
+            'name' => 'unknown',
+            'memUsage' => '0',
+        ];
+
+        if (count($output) > 0) {
+            $row = str_getcsv($output[0]);
+            if (count($row) >= 5) {
+                $result['name'] = $row[0];
+                $result['memUsage'] = $row[4];
             }
         }
-        
+
         return $result;
     }
-    
+
     /**
-     * 获取特定端口的连接信息
+     * 获取指定端口的连接信息
      */
-    private function getConnectionInfo(string $port): array
+    private function getConnectionInfoByPort(string $port): array
     {
+        $command = "netstat -ano | findstr :$port | findstr ESTABLISHED";
+        $output = $this->executeCommand($command);
+
         $result = [
             'ipCount' => 0,
             'connCount' => 0,
         ];
-        
-        $netstatOutput = $this->executeCommand("netstat -ano | findstr :$port | findstr ESTABLISHED");
-        $ips = [];
-        
-        foreach ($netstatOutput as $line) {
+
+        $uniqueIps = [];
+        foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) >= 3 && preg_match('/(.+):(\d+)$/', $parts[2], $matches)) {
-                $remoteIp = $matches[1];
-                if (!in_array($remoteIp, $ips)) {
-                    $ips[] = $remoteIp;
-                    $result['ipCount']++;
+            if (count($parts) >= 5) {
+                [$proto, $localAddr, $foreignAddr, $state, $pid] = $parts;
+                [$remoteIp, $remotePort] = explode(':', $foreignAddr);
+
+                if (!in_array($remoteIp, $uniqueIps)) {
+                    $uniqueIps[] = $remoteIp;
                 }
                 $result['connCount']++;
             }
         }
-        
+
+        $result['ipCount'] = count($uniqueIps);
         return $result;
     }
-    
+
     /**
-     * 获取系统总内存（字节）
+     * 获取系统总内存(MB)
      */
     private function getTotalMemory(): float
     {
-        $memory = 0;
-        $wmicOutput = $this->executeCommand('wmic computersystem get TotalPhysicalMemory /format:csv');
-        
-        foreach ($wmicOutput as $line) {
-            $parts = str_getcsv($line);
-            if (count($parts) >= 2 && is_numeric($parts[1])) {
-                $memory = (float)$parts[1];
-                break;
-            }
-        }
-        
-        return $memory;
+        $command = 'powershell.exe "(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1MB"';
+        $output = $this->executeCommand($command);
+
+        return count($output) > 0 ? (float)$output[0] : 0;
     }
 }

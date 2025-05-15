@@ -5,6 +5,7 @@
   "require": {
     "php": "^8.1",
     "chrisullyott/php-filesize": "^4.2",
+    "doctrine/collections": "^2.3",
     "geoip2/geoip2": "^3.2",
     "leo108/geolite2-db": "^2",
     "symfony/config": "^6.4",

@@ -9,9 +9,9 @@ class ProcessInfoVO
         private readonly string $name,
         private readonly int $ipCount,
         private readonly int $connectionCount,
-        private readonly string $uploadRate,
-        private readonly string $downloadRate,
-        private readonly string $cpuUsage,
+        private readonly int $uploadBytes,
+        private readonly int $downloadBytes,
+        private readonly float $cpuUsage,
         private readonly string $region
     ) {
     }
@@ -36,17 +36,17 @@ class ProcessInfoVO
         return $this->connectionCount;
     }
 
-    public function getUploadRate(): string
+    public function getUploadBytes(): int
     {
-        return $this->uploadRate;
+        return $this->uploadBytes;
     }
 
-    public function getDownloadRate(): string
+    public function getDownloadBytes(): int
     {
-        return $this->downloadRate;
+        return $this->downloadBytes;
     }
 
-    public function getCpuUsage(): string
+    public function getCpuUsage(): float
     {
         return $this->cpuUsage;
     }
@@ -66,10 +66,10 @@ class ProcessInfoVO
             (string)($data[1] ?? ''),
             (int)($data[2] ?? 0),
             (int)($data[3] ?? 0),
-            (string)($data[4] ?? '0.00 KB'),
-            (string)($data[5] ?? '0.00 KB'),
-            (string)($data[6] ?? '0.0%'),
-            (string)($data[7] ?? '0.0%')
+            (int)($data[4] ?? 0),
+            (int)($data[5] ?? 0),
+            (float)($data[6] ?? 0.0),
+            (string)($data[7] ?? '')
         );
     }
     
@@ -83,8 +83,8 @@ class ProcessInfoVO
             $this->name,
             $this->ipCount,
             $this->connectionCount,
-            $this->uploadRate,
-            $this->downloadRate,
+            $this->uploadBytes,
+            $this->downloadBytes,
             $this->cpuUsage,
             $this->region
         ];
