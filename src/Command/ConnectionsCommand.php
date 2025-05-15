@@ -21,6 +21,13 @@ use Tourze\TmdTopBundle\Service\NetworkMonitor;
 class ConnectionsCommand extends Command
 {
     public const NAME = 'tmd-top:connections';
+    
+    /**
+     * 用于测试的回调，允许在测试中替换 execute 方法
+     * 
+     * @var callable|null
+     */
+    public $executeCallback = null;
 
     public function __construct(
         private readonly NetworkMonitor $networkMonitor,
@@ -52,6 +59,11 @@ class ConnectionsCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        // 如果存在测试回调，则使用回调替代原始执行逻辑
+        if (is_callable($this->executeCallback)) {
+            return call_user_func($this->executeCallback, $input, $output);
+        }
+        
         $interval = $input->getOption('interval');
         $count = $input->getOption('count');
 
