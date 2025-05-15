@@ -1,0 +1,27 @@
+{
+  "name": "tourze/tmd-top-bundle",
+  "description": "https://github.com/CDWEN0526/tmd-top 的 PHP 实现",
+  "license": "MIT",
+  "require": {
+    "php": "^8.1",
+    "symfony/config": "^6.4",
+    "symfony/dependency-injection": "^6.4",
+    "symfony/framework-bundle": "^6.4",
+    "symfony/http-kernel": "^6.4",
+    "symfony/yaml": "^6.4 || ^7.1"
+  },
+  "require-dev": {
+    "phpstan/phpstan": "^2.1",
+    "phpunit/phpunit": "^10.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Tourze\\TmdTopBundle\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tourze\\TmdTopBundle\\Tests\\": "tests"
+    }
+  }
+}
