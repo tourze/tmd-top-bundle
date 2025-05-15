@@ -1,0 +1,19 @@
+{
+  "symbol-whitelist" : [
+    "Composer\\InstalledVersions"
+  ],
+  "php-core-extensions" : [
+    "Core",
+    "date",
+    "json",
+    "hash",
+    "pcre",
+    "Phar",
+    "Reflection",
+    "SPL",
+    "random",
+    "standard",
+    "pcntl"
+  ],
+  "scan-files" : []
+}
