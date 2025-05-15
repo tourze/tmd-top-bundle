@@ -1,10 +1,14 @@
 {
   "name": "tourze/tmd-top-bundle",
-  "description": "https://github.com/CDWEN0526/tmd-top 的 PHP 实现",
+  "description": "https://github.com/CDWEN0526/tmd-top 的 PHP 实现，一个用于监控系统状态的Symfony Bundle，包括网卡信息、监听服务、连接详情和运行程序的数据展示",
   "license": "MIT",
   "require": {
     "php": "^8.1",
+    "chrisullyott/php-filesize": "^4.2",
+    "geoip2/geoip2": "^3.2",
+    "leo108/geolite2-db": "^2",
     "symfony/config": "^6.4",
+    "symfony/console": "^6.4",
     "symfony/dependency-injection": "^6.4",
     "symfony/framework-bundle": "^6.4",
     "symfony/http-kernel": "^6.4",

@@ -4,5 +4,12 @@ services:
     autowire: true      # Automatically injects dependencies in your services.
     autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-#  Tourze\TmdTopBundle\EventSubscriber\:
-#    resource: '../../EventSubscriber/'
+  Tourze\TmdTopBundle\Command\:
+    resource: '../../Command/'
+  Tourze\TmdTopBundle\Factory\:
+    resource: '../../Factory/'
+  Tourze\TmdTopBundle\Service\:
+    resource: '../../Service/'
+
+  GeoIp2\Database\Reader:
+    factory: [ '@Tourze\TmdTopBundle\Factory\GeoIP2Factory', 'create' ]
