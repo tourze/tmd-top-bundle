@@ -139,7 +139,7 @@ class ProcessesCommand extends Command
     {
         try {
             return (new FileSize($bytes))->asAuto();
-        } catch  (\Throwable $e) {
+        } catch (\Throwable $e) {
             // 如果 FileSize 库出现问题，提供基本的后备格式化
             if ($bytes < 1024) {
                 return "$bytes B";

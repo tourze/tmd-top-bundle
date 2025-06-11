@@ -269,7 +269,7 @@ class MacOSAdapter extends AbstractAdapter
                     $mem = (float)$parts[1];
                 }
             }
-        } catch  (\Throwable $e) {
+        } catch (\Throwable $e) {
             // 捕获任何异常，返回默认值
         }
 
@@ -291,7 +291,7 @@ class MacOSAdapter extends AbstractAdapter
             $output = $this->executeCommand($command);
 
             return count($output) > 0 ? trim($output[0]) : 'unknown';
-        } catch  (\Throwable $e) {
+        } catch (\Throwable $e) {
             return 'unknown';
         }
     }
