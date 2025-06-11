@@ -51,7 +51,7 @@ class ConnectionsCommandTest extends TestCase
                 if (!$this->networkMonitor->isPrivateIp($ip)) {
                     try {
                         $location = '美国/加利福尼亚/山景城';
-                    } catch (\Exception $e) {
+                    } catch  (\Throwable $e) {
                         $location = '未知';
                     }
                 }

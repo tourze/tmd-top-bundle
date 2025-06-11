@@ -148,7 +148,7 @@ class ConnectionsCommand extends Command
             return "中国/$country/$province";
         } catch (AddressNotFoundException $e) {
             return 'null/null/null';
-        } catch (\Exception $e) {
+        } catch  (\Throwable $e) {
             return 'null/null/null';
         }
     }
@@ -160,7 +160,7 @@ class ConnectionsCommand extends Command
     {
         try {
             return (new FileSize($bytes))->asAuto();
-        } catch (\Exception $e) {
+        } catch  (\Throwable $e) {
             // 如果 FileSize 库出现问题，提供基本的后备格式化
             if ($bytes < 1024) {
                 return "$bytes B";
