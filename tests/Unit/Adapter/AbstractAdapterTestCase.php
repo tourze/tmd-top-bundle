@@ -8,7 +8,7 @@ use Tourze\TmdTopBundle\Adapter\AdapterInterface;
 /**
  * 适配器的抽象测试类，定义了对所有适配器的通用测试
  */
-abstract class AbstractAdapterTest extends TestCase
+abstract class AbstractAdapterTestCase extends TestCase
 {
     /**
      * 返回要测试的适配器实例

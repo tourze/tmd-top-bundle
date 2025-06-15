@@ -10,7 +10,7 @@ use Tourze\TmdTopBundle\VO\ProcessInfoVO;
 use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
 use Tourze\TmdTopBundle\VO\ServiceInfoVO;
 
-class TestAdapterTest extends AbstractAdapterTest
+class TestAdapterTest extends AbstractAdapterTestCase
 {
     private TestAdapter $adapter;
     
