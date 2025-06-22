@@ -139,7 +139,6 @@ class ProcessInfoVOTest extends TestCase
         
         $result = $processInfo->toArray();
         
-        $this->assertIsArray($result);
         $this->assertCount(8, $result);
         $this->assertSame('1234', $result[0]);
         $this->assertSame('nginx', $result[1]);

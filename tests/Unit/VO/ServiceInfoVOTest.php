@@ -159,7 +159,6 @@ class ServiceInfoVOTest extends TestCase
         
         $result = $serviceInfo->toArray();
         
-        $this->assertIsArray($result);
         $this->assertCount(10, $result);
         $this->assertSame('1234', $result[0]);
         $this->assertSame('nginx', $result[1]);

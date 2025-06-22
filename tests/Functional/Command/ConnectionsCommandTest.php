@@ -49,11 +49,7 @@ class ConnectionsCommandTest extends TestCase
                 $ip = $connection->getRemoteIp();
                 
                 if (!$this->networkMonitor->isPrivateIp($ip)) {
-                    try {
-                        $location = '美国/加利福尼亚/山景城';
-                    } catch (\Throwable $e) {
-                        $location = '未知';
-                    }
+                    $location = '美国/加利福尼亚/山景城';
                 }
 
                 $output->writeln(sprintf(

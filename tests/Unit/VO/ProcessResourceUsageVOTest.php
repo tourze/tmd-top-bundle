@@ -72,7 +72,6 @@ class ProcessResourceUsageVOTest extends TestCase
         
         $result = $resourceUsage->toArray();
         
-        $this->assertIsArray($result);
         $this->assertArrayHasKey('cpu', $result);
         $this->assertArrayHasKey('mem', $result);
         $this->assertSame(12.34, $result['cpu']);

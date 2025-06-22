@@ -109,7 +109,6 @@ class ConnectionInfoVOTest extends TestCase
         
         $result = $connectionInfo->toArray();
         
-        $this->assertIsArray($result);
         $this->assertCount(5, $result);
         $this->assertSame('192.168.1.1', $result[0]);
         $this->assertSame('12345', $result[1]);

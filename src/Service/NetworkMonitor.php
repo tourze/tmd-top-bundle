@@ -24,7 +24,7 @@ class NetworkMonitor
 
     /**
      * 获取网卡信息
-     * 
+     *
      * @return Collection<int, NetcardInfoVO>
      */
     public function getNetcardInfo(): Collection
@@ -34,7 +34,7 @@ class NetworkMonitor
 
     /**
      * 获取监听服务信息
-     * 
+     *
      * @return Collection<int, ServiceInfoVO>
      */
     public function getServicesInfo(): Collection
@@ -44,7 +44,7 @@ class NetworkMonitor
 
     /**
      * 获取连接信息
-     * 
+     *
      * @return Collection<int, ConnectionInfoVO>
      */
     public function getConnectionsInfo(): Collection
@@ -54,7 +54,7 @@ class NetworkMonitor
 
     /**
      * 获取进程信息
-     * 
+     *
      * @return Collection<int, ProcessInfoVO>
      */
     public function getProcessesInfo(): Collection

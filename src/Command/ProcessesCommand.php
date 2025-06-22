@@ -8,6 +8,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Tourze\TmdTopBundle\Service\NetworkMonitor;
@@ -22,7 +23,7 @@ class ProcessesCommand extends Command
     
     /**
      * 用于测试的回调，允许在测试中替换 execute 方法
-     * 
+     *
      * @var callable|null
      */
     public $executeCallback = null;
@@ -73,6 +74,12 @@ class ProcessesCommand extends Command
         }
 
         // 创建输出分段
+        if (!$output instanceof ConsoleOutputInterface) {
+            $io = new SymfonyStyle($input, $output);
+            $io->error('This command requires an interactive terminal.');
+            return Command::FAILURE;
+        }
+        
         $headerSection = $output->section();
         $tableSection = $output->section();
 

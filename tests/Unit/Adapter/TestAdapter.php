@@ -51,7 +51,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 设置网卡信息测试数据
-     * 
+     *
      * @param Collection<int, NetcardInfoVO> $netcardInfo
      */
     public function setNetcardInfo(Collection $netcardInfo): void
@@ -61,7 +61,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 设置服务信息测试数据
-     * 
+     *
      * @param Collection<int, ServiceInfoVO> $servicesInfo
      */
     public function setServicesInfo(Collection $servicesInfo): void
@@ -71,7 +71,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 设置连接信息测试数据
-     * 
+     *
      * @param Collection<int, ConnectionInfoVO> $connectionsInfo
      */
     public function setConnectionsInfo(Collection $connectionsInfo): void
@@ -81,7 +81,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 设置进程信息测试数据
-     * 
+     *
      * @param Collection<int, ProcessInfoVO> $processesInfo
      */
     public function setProcessesInfo(Collection $processesInfo): void
@@ -91,7 +91,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 设置进程资源使用情况测试数据
-     * 
+     *
      * @param string $pid
      * @param ProcessResourceUsageVO $usage
      */
@@ -102,7 +102,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 获取网卡信息
-     * 
+     *
      * @return Collection<int, NetcardInfoVO>
      */
     public function getNetcardInfo(): Collection
@@ -112,7 +112,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 获取监听服务信息
-     * 
+     *
      * @return Collection<int, ServiceInfoVO>
      */
     public function getServicesInfo(): Collection
@@ -122,7 +122,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 获取连接信息
-     * 
+     *
      * @return Collection<int, ConnectionInfoVO>
      */
     public function getConnectionsInfo(): Collection
@@ -132,7 +132,7 @@ class TestAdapter implements AdapterInterface
     
     /**
      * 获取进程信息
-     * 
+     *
      * @return Collection<int, ProcessInfoVO>
      */
     public function getProcessesInfo(): Collection

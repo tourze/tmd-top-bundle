@@ -43,7 +43,7 @@ class MacOSAdapter extends AbstractAdapter
                         'rx' => 0,
                     ];
                 }
-            } elseif ($currentInterface && strpos($line, 'bytes') !== false) {
+            } elseif ($currentInterface !== null && strpos($line, 'bytes') !== false) {
                 // 查找包含接收(RX)和发送(TX)字节数的行
                 if (preg_match('/RX packets \d+\s+bytes (\d+)/', $line, $matches)) {
                     $interfaces[$currentInterface]['rx'] = (int) $matches[1];

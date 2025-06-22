@@ -59,7 +59,6 @@ class NetcardInfoVOTest extends TestCase
         
         $result = $netcardInfo->toArray();
         
-        $this->assertIsArray($result);
         $this->assertCount(3, $result);
         $this->assertSame('eth0', $result[0]);
         $this->assertSame(1000, $result[1]);
