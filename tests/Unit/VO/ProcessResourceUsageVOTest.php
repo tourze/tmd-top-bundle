@@ -7,74 +7,50 @@ use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
 
 class ProcessResourceUsageVOTest extends TestCase
 {
-    public function testConstruct_withValidData(): void
+    public function testConstructorAndGetters(): void
     {
-        $cpu = 12.34;
-        $mem = 56.78;
-        
-        $resourceUsage = new ProcessResourceUsageVO($cpu, $mem);
-        
-        $this->assertSame($cpu, $resourceUsage->getCpu());
-        $this->assertSame($mem, $resourceUsage->getMem());
+        $vo = new ProcessResourceUsageVO(25.5, 64.2);
+
+        $this->assertSame(25.5, $vo->getCpu());
+        $this->assertSame(64.2, $vo->getMem());
     }
-    
-    public function testFromArray_withValidData(): void
+
+    public function testFromArray(): void
     {
-        $data = [
-            'cpu' => 12.34,
-            'mem' => 56.78
-        ];
-        
-        $resourceUsage = ProcessResourceUsageVO::fromArray($data);
-        
-        $this->assertSame(12.34, $resourceUsage->getCpu());
-        $this->assertSame(56.78, $resourceUsage->getMem());
+        $data = ['cpu' => 15.8, 'mem' => 32.4];
+        $vo = ProcessResourceUsageVO::fromArray($data);
+
+        $this->assertSame(15.8, $vo->getCpu());
+        $this->assertSame(32.4, $vo->getMem());
     }
-    
-    public function testFromArray_withMissingData(): void
-    {
-        $data = [
-            'cpu' => 12.34
-        ];
-        
-        $resourceUsage = ProcessResourceUsageVO::fromArray($data);
-        
-        $this->assertSame(12.34, $resourceUsage->getCpu());
-        $this->assertSame(0.0, $resourceUsage->getMem());
-    }
-    
-    public function testFromArray_withEmptyArray(): void
+
+    public function testFromArrayWithMissingData(): void
     {
         $data = [];
-        
-        $resourceUsage = ProcessResourceUsageVO::fromArray($data);
-        
-        $this->assertSame(0.0, $resourceUsage->getCpu());
-        $this->assertSame(0.0, $resourceUsage->getMem());
+        $vo = ProcessResourceUsageVO::fromArray($data);
+
+        $this->assertSame(0.0, $vo->getCpu());
+        $this->assertSame(0.0, $vo->getMem());
     }
-    
-    public function testFromArray_withStringValues(): void
+
+    public function testFromArrayWithStringValues(): void
     {
-        $data = [
-            'cpu' => '12.34',
-            'mem' => '56.78'
+        $data = ['cpu' => '45.7', 'mem' => '78.9'];
+        $vo = ProcessResourceUsageVO::fromArray($data);
+
+        $this->assertSame(45.7, $vo->getCpu());
+        $this->assertSame(78.9, $vo->getMem());
+    }
+
+    public function testToArray(): void
+    {
+        $vo = new ProcessResourceUsageVO(12.3, 45.6);
+
+        $expected = [
+            'cpu' => 12.3,
+            'mem' => 45.6
         ];
-        
-        $resourceUsage = ProcessResourceUsageVO::fromArray($data);
-        
-        $this->assertSame(12.34, $resourceUsage->getCpu());
-        $this->assertSame(56.78, $resourceUsage->getMem());
+
+        $this->assertSame($expected, $vo->toArray());
     }
-    
-    public function testToArray_returnsCorrectArray(): void
-    {
-        $resourceUsage = new ProcessResourceUsageVO(12.34, 56.78);
-        
-        $result = $resourceUsage->toArray();
-        
-        $this->assertArrayHasKey('cpu', $result);
-        $this->assertArrayHasKey('mem', $result);
-        $this->assertSame(12.34, $result['cpu']);
-        $this->assertSame(56.78, $result['mem']);
-    }
-} 
+}

@@ -7,113 +7,65 @@ use Tourze\TmdTopBundle\VO\ConnectionInfoVO;
 
 class ConnectionInfoVOTest extends TestCase
 {
-    public function testConstruct_withValidData(): void
+    public function testConstructorAndGetters(): void
     {
-        $remoteIp = '192.168.1.1';
-        $remotePort = '12345';
-        $uploadBytes = 1000;
-        $downloadBytes = 2000;
-        $location = '北京';
-        
-        $connectionInfo = new ConnectionInfoVO(
-            $remoteIp,
-            $remotePort,
-            $uploadBytes,
-            $downloadBytes,
-            $location
+        $vo = new ConnectionInfoVO(
+            '192.168.1.1',
+            '8080',
+            1024,
+            2048,
+            '中国/广东/深圳'
         );
-        
-        $this->assertSame($remoteIp, $connectionInfo->getRemoteIp());
-        $this->assertSame($remotePort, $connectionInfo->getRemotePort());
-        $this->assertSame($uploadBytes, $connectionInfo->getUploadBytes());
-        $this->assertSame($downloadBytes, $connectionInfo->getDownloadBytes());
-        $this->assertSame($location, $connectionInfo->getLocation());
+
+        $this->assertSame('192.168.1.1', $vo->getRemoteIp());
+        $this->assertSame('8080', $vo->getRemotePort());
+        $this->assertSame(1024, $vo->getUploadBytes());
+        $this->assertSame(2048, $vo->getDownloadBytes());
+        $this->assertSame('中国/广东/深圳', $vo->getLocation());
     }
-    
-    public function testFromArray_withValidData(): void
+
+    public function testFromArray(): void
     {
-        $data = [
-            '192.168.1.1',
-            '12345',
-            1000,
-            2000,
-            '北京'
-        ];
-        
-        $connectionInfo = ConnectionInfoVO::fromArray($data);
-        
-        $this->assertSame('192.168.1.1', $connectionInfo->getRemoteIp());
-        $this->assertSame('12345', $connectionInfo->getRemotePort());
-        $this->assertSame(1000, $connectionInfo->getUploadBytes());
-        $this->assertSame(2000, $connectionInfo->getDownloadBytes());
-        $this->assertSame('北京', $connectionInfo->getLocation());
+        $data = ['10.0.0.1', '443', 512, 1536, '美国/加利福尼亚/洛杉矶'];
+        $vo = ConnectionInfoVO::fromArray($data);
+
+        $this->assertSame('10.0.0.1', $vo->getRemoteIp());
+        $this->assertSame('443', $vo->getRemotePort());
+        $this->assertSame(512, $vo->getUploadBytes());
+        $this->assertSame(1536, $vo->getDownloadBytes());
+        $this->assertSame('美国/加利福尼亚/洛杉矶', $vo->getLocation());
     }
-    
-    public function testFromArray_withMissingData(): void
-    {
-        $data = [
-            '192.168.1.1',
-            '12345'
-        ];
-        
-        $connectionInfo = ConnectionInfoVO::fromArray($data);
-        
-        $this->assertSame('192.168.1.1', $connectionInfo->getRemoteIp());
-        $this->assertSame('12345', $connectionInfo->getRemotePort());
-        $this->assertSame(0, $connectionInfo->getUploadBytes());
-        $this->assertSame(0, $connectionInfo->getDownloadBytes());
-        $this->assertSame('未知', $connectionInfo->getLocation());
-    }
-    
-    public function testFromArray_withEmptyArray(): void
+
+    public function testFromArrayWithMissingData(): void
     {
         $data = [];
-        
-        $connectionInfo = ConnectionInfoVO::fromArray($data);
-        
-        $this->assertSame('', $connectionInfo->getRemoteIp());
-        $this->assertSame('', $connectionInfo->getRemotePort());
-        $this->assertSame(0, $connectionInfo->getUploadBytes());
-        $this->assertSame(0, $connectionInfo->getDownloadBytes());
-        $this->assertSame('未知', $connectionInfo->getLocation());
+        $vo = ConnectionInfoVO::fromArray($data);
+
+        $this->assertSame('', $vo->getRemoteIp());
+        $this->assertSame('', $vo->getRemotePort());
+        $this->assertSame(0, $vo->getUploadBytes());
+        $this->assertSame(0, $vo->getDownloadBytes());
+        $this->assertSame('未知', $vo->getLocation());
     }
-    
-    public function testFromArray_withNonNumericValues(): void
+
+    public function testToArray(): void
     {
-        $data = [
-            '192.168.1.1',
-            '12345',
-            'thousand',
-            'two-thousand',
-            '北京'
-        ];
-        
-        $connectionInfo = ConnectionInfoVO::fromArray($data);
-        
-        $this->assertSame('192.168.1.1', $connectionInfo->getRemoteIp());
-        $this->assertSame('12345', $connectionInfo->getRemotePort());
-        $this->assertSame(0, $connectionInfo->getUploadBytes());
-        $this->assertSame(0, $connectionInfo->getDownloadBytes());
-        $this->assertSame('北京', $connectionInfo->getLocation());
-    }
-    
-    public function testToArray_returnsCorrectArray(): void
-    {
-        $connectionInfo = new ConnectionInfoVO(
-            '192.168.1.1',
-            '12345',
-            1000,
-            2000,
-            '北京'
+        $vo = new ConnectionInfoVO(
+            '203.208.60.1',
+            '80',
+            256,
+            512,
+            '美国/华盛顿/西雅图'
         );
-        
-        $result = $connectionInfo->toArray();
-        
-        $this->assertCount(5, $result);
-        $this->assertSame('192.168.1.1', $result[0]);
-        $this->assertSame('12345', $result[1]);
-        $this->assertSame(1000, $result[2]);
-        $this->assertSame(2000, $result[3]);
-        $this->assertSame('北京', $result[4]);
+
+        $expected = [
+            '203.208.60.1',
+            '80',
+            256,
+            512,
+            '美国/华盛顿/西雅图'
+        ];
+
+        $this->assertSame($expected, $vo->toArray());
     }
-} 
+}

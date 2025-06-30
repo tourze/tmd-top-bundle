@@ -110,7 +110,9 @@ class LinuxAdapter extends AbstractAdapter
             }
 
             // 解析本地地址和远程地址
-            [$remoteIp, $remotePort] = explode(':', $parts[4]);
+            $remoteAddress = explode(':', $parts[4]);
+            $remoteIp = $remoteAddress[0] ?? '';
+            $remotePort = $remoteAddress[1] ?? '';
 
             // 忽略本地回环地址
             if ($remoteIp === '127.0.0.1') {

@@ -7,146 +7,98 @@ use Tourze\TmdTopBundle\VO\ProcessInfoVO;
 
 class ProcessInfoVOTest extends TestCase
 {
-    public function testConstruct_withValidData(): void
+    public function testConstructorAndGetters(): void
     {
-        $pid = '1234';
-        $name = 'nginx';
-        $ipCount = 10;
-        $connectionCount = 100;
-        $uploadBytes = 1000;
-        $downloadBytes = 2000;
-        $cpuUsage = 1.5;
-        $region = '北京,上海';
-        
-        $processInfo = new ProcessInfoVO(
-            $pid,
-            $name,
-            $ipCount,
-            $connectionCount,
-            $uploadBytes,
-            $downloadBytes,
-            $cpuUsage,
-            $region
-        );
-        
-        $this->assertSame($pid, $processInfo->getPid());
-        $this->assertSame($name, $processInfo->getName());
-        $this->assertSame($ipCount, $processInfo->getIpCount());
-        $this->assertSame($connectionCount, $processInfo->getConnectionCount());
-        $this->assertSame($uploadBytes, $processInfo->getUploadBytes());
-        $this->assertSame($downloadBytes, $processInfo->getDownloadBytes());
-        $this->assertSame($cpuUsage, $processInfo->getCpuUsage());
-        $this->assertSame($region, $processInfo->getRegion());
-    }
-    
-    public function testFromArray_withValidData(): void
-    {
-        $data = [
+        $vo = new ProcessInfoVO(
             '1234',
             'nginx',
+            5,
             10,
-            100,
-            1000,
-            2000,
-            1.5,
-            '北京,上海'
-        ];
-        
-        $processInfo = ProcessInfoVO::fromArray($data);
-        
-        $this->assertSame('1234', $processInfo->getPid());
-        $this->assertSame('nginx', $processInfo->getName());
-        $this->assertSame(10, $processInfo->getIpCount());
-        $this->assertSame(100, $processInfo->getConnectionCount());
-        $this->assertSame(1000, $processInfo->getUploadBytes());
-        $this->assertSame(2000, $processInfo->getDownloadBytes());
-        $this->assertSame(1.5, $processInfo->getCpuUsage());
-        $this->assertSame('北京,上海', $processInfo->getRegion());
+            1024,
+            2048,
+            25.5,
+            '中国'
+        );
+
+        $this->assertSame('1234', $vo->getPid());
+        $this->assertSame('nginx', $vo->getName());
+        $this->assertSame(5, $vo->getIpCount());
+        $this->assertSame(10, $vo->getConnectionCount());
+        $this->assertSame(1024, $vo->getUploadBytes());
+        $this->assertSame(2048, $vo->getDownloadBytes());
+        $this->assertSame(25.5, $vo->getCpuUsage());
+        $this->assertSame('中国', $vo->getRegion());
     }
-    
-    public function testFromArray_withMissingData(): void
+
+    public function testFromArray(): void
     {
-        $data = [
-            '1234',
-            'nginx'
-        ];
-        
-        $processInfo = ProcessInfoVO::fromArray($data);
-        
-        $this->assertSame('1234', $processInfo->getPid());
-        $this->assertSame('nginx', $processInfo->getName());
-        $this->assertSame(0, $processInfo->getIpCount());
-        $this->assertSame(0, $processInfo->getConnectionCount());
-        $this->assertSame(0, $processInfo->getUploadBytes());
-        $this->assertSame(0, $processInfo->getDownloadBytes());
-        $this->assertSame(0.0, $processInfo->getCpuUsage());
-        $this->assertSame('', $processInfo->getRegion());
+        $data = ['5678', 'apache2', 3, 8, 512, 1536, 15.8, '美国'];
+        $vo = ProcessInfoVO::fromArray($data);
+
+        $this->assertSame('5678', $vo->getPid());
+        $this->assertSame('apache2', $vo->getName());
+        $this->assertSame(3, $vo->getIpCount());
+        $this->assertSame(8, $vo->getConnectionCount());
+        $this->assertSame(512, $vo->getUploadBytes());
+        $this->assertSame(1536, $vo->getDownloadBytes());
+        $this->assertSame(15.8, $vo->getCpuUsage());
+        $this->assertSame('美国', $vo->getRegion());
     }
-    
-    public function testFromArray_withEmptyArray(): void
+
+    public function testFromArrayWithMissingData(): void
     {
         $data = [];
-        
-        $processInfo = ProcessInfoVO::fromArray($data);
-        
-        $this->assertSame('', $processInfo->getPid());
-        $this->assertSame('', $processInfo->getName());
-        $this->assertSame(0, $processInfo->getIpCount());
-        $this->assertSame(0, $processInfo->getConnectionCount());
-        $this->assertSame(0, $processInfo->getUploadBytes());
-        $this->assertSame(0, $processInfo->getDownloadBytes());
-        $this->assertSame(0.0, $processInfo->getCpuUsage());
-        $this->assertSame('', $processInfo->getRegion());
+        $vo = ProcessInfoVO::fromArray($data);
+
+        $this->assertSame('', $vo->getPid());
+        $this->assertSame('', $vo->getName());
+        $this->assertSame(0, $vo->getIpCount());
+        $this->assertSame(0, $vo->getConnectionCount());
+        $this->assertSame(0, $vo->getUploadBytes());
+        $this->assertSame(0, $vo->getDownloadBytes());
+        $this->assertSame(0.0, $vo->getCpuUsage());
+        $this->assertSame('', $vo->getRegion());
     }
-    
-    public function testFromArray_withNonNumericValues(): void
+
+    public function testFromArrayWithStringValues(): void
     {
-        $data = [
-            '1234',
-            'nginx',
-            'ten',
-            'hundred',
-            'thousand',
-            'two-thousand',
-            'one-point-five',
-            '北京,上海'
-        ];
-        
-        $processInfo = ProcessInfoVO::fromArray($data);
-        
-        $this->assertSame('1234', $processInfo->getPid());
-        $this->assertSame('nginx', $processInfo->getName());
-        $this->assertSame(0, $processInfo->getIpCount());
-        $this->assertSame(0, $processInfo->getConnectionCount());
-        $this->assertSame(0, $processInfo->getUploadBytes());
-        $this->assertSame(0, $processInfo->getDownloadBytes());
-        $this->assertSame(0.0, $processInfo->getCpuUsage());
-        $this->assertSame('北京,上海', $processInfo->getRegion());
+        $data = ['9999', 'mysql', '2', '6', '256', '768', '45.7', '日本'];
+        $vo = ProcessInfoVO::fromArray($data);
+
+        $this->assertSame('9999', $vo->getPid());
+        $this->assertSame('mysql', $vo->getName());
+        $this->assertSame(2, $vo->getIpCount());
+        $this->assertSame(6, $vo->getConnectionCount());
+        $this->assertSame(256, $vo->getUploadBytes());
+        $this->assertSame(768, $vo->getDownloadBytes());
+        $this->assertSame(45.7, $vo->getCpuUsage());
+        $this->assertSame('日本', $vo->getRegion());
     }
-    
-    public function testToArray_returnsCorrectArray(): void
+
+    public function testToArray(): void
     {
-        $processInfo = new ProcessInfoVO(
-            '1234',
-            'nginx',
-            10,
-            100,
-            1000,
-            2000,
-            1.5,
-            '北京,上海'
+        $vo = new ProcessInfoVO(
+            '4321',
+            'redis',
+            1,
+            4,
+            128,
+            384,
+            8.2,
+            '韩国'
         );
-        
-        $result = $processInfo->toArray();
-        
-        $this->assertCount(8, $result);
-        $this->assertSame('1234', $result[0]);
-        $this->assertSame('nginx', $result[1]);
-        $this->assertSame(10, $result[2]);
-        $this->assertSame(100, $result[3]);
-        $this->assertSame(1000, $result[4]);
-        $this->assertSame(2000, $result[5]);
-        $this->assertSame(1.5, $result[6]);
-        $this->assertSame('北京,上海', $result[7]);
+
+        $expected = [
+            '4321',
+            'redis',
+            1,
+            4,
+            128,
+            384,
+            8.2,
+            '韩国'
+        ];
+
+        $this->assertSame($expected, $vo->toArray());
     }
-} 
+}

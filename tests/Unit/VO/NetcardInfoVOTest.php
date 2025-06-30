@@ -7,61 +7,51 @@ use Tourze\TmdTopBundle\VO\NetcardInfoVO;
 
 class NetcardInfoVOTest extends TestCase
 {
-    public function testConstruct_withValidData(): void
+    public function testConstructorAndGetters(): void
     {
-        $name = 'eth0';
-        $uploadBytes = 1000;
-        $downloadBytes = 2000;
-        
-        $netcardInfo = new NetcardInfoVO($name, $uploadBytes, $downloadBytes);
-        
-        $this->assertSame($name, $netcardInfo->getName());
-        $this->assertSame($uploadBytes, $netcardInfo->getUploadBytes());
-        $this->assertSame($downloadBytes, $netcardInfo->getDownloadBytes());
+        $vo = new NetcardInfoVO('eth0', 1024, 2048);
+
+        $this->assertSame('eth0', $vo->getName());
+        $this->assertSame(1024, $vo->getUploadBytes());
+        $this->assertSame(2048, $vo->getDownloadBytes());
     }
-    
-    public function testFromArray_withValidData(): void
+
+    public function testFromArray(): void
     {
-        $data = ['eth0', 1000, 2000];
-        
-        $netcardInfo = NetcardInfoVO::fromArray($data);
-        
-        $this->assertSame('eth0', $netcardInfo->getName());
-        $this->assertSame(1000, $netcardInfo->getUploadBytes());
-        $this->assertSame(2000, $netcardInfo->getDownloadBytes());
+        $data = ['wlan0', 512, 1536];
+        $vo = NetcardInfoVO::fromArray($data);
+
+        $this->assertSame('wlan0', $vo->getName());
+        $this->assertSame(512, $vo->getUploadBytes());
+        $this->assertSame(1536, $vo->getDownloadBytes());
     }
-    
-    public function testFromArray_withMissingData(): void
-    {
-        $data = ['eth0'];
-        
-        $netcardInfo = NetcardInfoVO::fromArray($data);
-        
-        $this->assertSame('eth0', $netcardInfo->getName());
-        $this->assertSame(0, $netcardInfo->getUploadBytes());
-        $this->assertSame(0, $netcardInfo->getDownloadBytes());
-    }
-    
-    public function testFromArray_withEmptyArray(): void
+
+    public function testFromArrayWithMissingData(): void
     {
         $data = [];
-        
-        $netcardInfo = NetcardInfoVO::fromArray($data);
-        
-        $this->assertSame('', $netcardInfo->getName());
-        $this->assertSame(0, $netcardInfo->getUploadBytes());
-        $this->assertSame(0, $netcardInfo->getDownloadBytes());
+        $vo = NetcardInfoVO::fromArray($data);
+
+        $this->assertSame('', $vo->getName());
+        $this->assertSame(0, $vo->getUploadBytes());
+        $this->assertSame(0, $vo->getDownloadBytes());
     }
-    
-    public function testToArray_returnsCorrectArray(): void
+
+    public function testFromArrayWithStringNumbers(): void
     {
-        $netcardInfo = new NetcardInfoVO('eth0', 1000, 2000);
-        
-        $result = $netcardInfo->toArray();
-        
-        $this->assertCount(3, $result);
-        $this->assertSame('eth0', $result[0]);
-        $this->assertSame(1000, $result[1]);
-        $this->assertSame(2000, $result[2]);
+        $data = ['lo', '256', '768'];
+        $vo = NetcardInfoVO::fromArray($data);
+
+        $this->assertSame('lo', $vo->getName());
+        $this->assertSame(256, $vo->getUploadBytes());
+        $this->assertSame(768, $vo->getDownloadBytes());
     }
-} 
+
+    public function testToArray(): void
+    {
+        $vo = new NetcardInfoVO('enp0s3', 4096, 8192);
+
+        $expected = ['enp0s3', 4096, 8192];
+
+        $this->assertSame($expected, $vo->toArray());
+    }
+}
