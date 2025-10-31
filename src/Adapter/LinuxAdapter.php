@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\TmdTopBundle\Adapter;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -22,7 +24,7 @@ class LinuxAdapter extends AbstractAdapter
         $collection = new ArrayCollection();
         $interfaces = glob('/sys/class/net/*');
 
-        if (empty($interfaces)) {
+        if (false === $interfaces || [] === $interfaces) {
             return $collection;
         }
 
@@ -30,10 +32,10 @@ class LinuxAdapter extends AbstractAdapter
             $ifname = basename($interface);
 
             // 获取网卡发送和接收的字节数
-            $txBytes = file_exists("$interface/statistics/tx_bytes") ?
-                (int)file_get_contents("$interface/statistics/tx_bytes") : 0;
-            $rxBytes = file_exists("$interface/statistics/rx_bytes") ?
-                (int)file_get_contents("$interface/statistics/rx_bytes") : 0;
+            $txBytes = file_exists("{$interface}/statistics/tx_bytes") ?
+                (int) file_get_contents("{$interface}/statistics/tx_bytes") : 0;
+            $rxBytes = file_exists("{$interface}/statistics/rx_bytes") ?
+                (int) file_get_contents("{$interface}/statistics/rx_bytes") : 0;
 
             $netcardInfo = new NetcardInfoVO($ifname, $txBytes, $rxBytes);
             $collection->add($netcardInfo);
@@ -63,7 +65,7 @@ class LinuxAdapter extends AbstractAdapter
 
             $pid = $matches[5];
             $serviceName = $matches[6];
-            $ip = $matches[3] === '*' ? '*' : $matches[3];
+            $ip = '*' === $matches[3] ? '*' : $matches[3];
             $port = $matches[4];
 
             // 获取连接数和IP数
@@ -105,7 +107,7 @@ class LinuxAdapter extends AbstractAdapter
 
         foreach ($netstatOutput as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) < 5) {
+            if (!is_array($parts) || count($parts) < 5) {
                 continue;
             }
 
@@ -115,7 +117,7 @@ class LinuxAdapter extends AbstractAdapter
             $remotePort = $remoteAddress[1] ?? '';
 
             // 忽略本地回环地址
-            if ($remoteIp === '127.0.0.1') {
+            if ('127.0.0.1' === $remoteIp) {
                 continue;
             }
 
@@ -141,55 +143,103 @@ class LinuxAdapter extends AbstractAdapter
     public function getProcessesInfo(): Collection
     {
         $collection = new ArrayCollection();
-
-        // 获取所有有网络连接的进程
         $ssOutput = $this->executeCommand('ss -tunp | grep ESTAB');
+        $processConnections = $this->parseProcessConnections($ssOutput);
 
-        $processConnections = [];
-
-        foreach ($ssOutput as $line) {
-            if (preg_match('/pid=(\d+),.*?\("([^"]+)"/', $line, $matches)) {
-                $pid = $matches[1];
-                $procName = $matches[2];
-
-                if (!isset($processConnections[$pid])) {
-                    $processConnections[$pid] = [
-                        'name' => $procName,
-                        'ips' => [],
-                        'connections' => 0,
-                    ];
-                }
-
-                // 解析远程IP
-                if (preg_match('/ESTAB\s+\d+\s+\d+\s+\S+\s+(\S+):/', $line, $ipMatches)) {
-                    $remoteIp = explode(':', $ipMatches[1])[0];
-                    if (!in_array($remoteIp, $processConnections[$pid]['ips'])) {
-                        $processConnections[$pid]['ips'][] = $remoteIp;
-                    }
-                    $processConnections[$pid]['connections']++;
-                }
-            }
-        }
-
-        // 获取进程资源使用情况并组装最终结果
         foreach ($processConnections as $pid => $info) {
-            $resourceUsage = $this->getProcessResourceUsage($pid);
-
-            $processInfo = new ProcessInfoVO(
-                $pid,
-                $info['name'],
-                count($info['ips']),
-                $info['connections'],
-                1024, // 上传字节数，实际实现需要监控一段时间
-                0, // 下载字节数，实际实现需要监控一段时间
-                $resourceUsage->getCpu(),
-                '其他' // 实际应用可能是地区信息
-            );
-
+            $processInfo = $this->createProcessInfoVO((string) $pid, $info);
             $collection->add($processInfo);
         }
 
         return $collection;
+    }
+
+    /**
+     * 解析进程连接信息
+     *
+     * @param array<string> $ssOutput
+     * @return array<string, array{name: string, ips: array<string>, connections: int}>
+     */
+    private function parseProcessConnections(array $ssOutput): array
+    {
+        $processConnections = [];
+
+        foreach ($ssOutput as $line) {
+            $processInfo = $this->extractProcessInfoFromLine($line);
+            if (null === $processInfo) {
+                continue;
+            }
+
+            $pid = $processInfo['pid'];
+            if (!isset($processConnections[$pid])) {
+                $processConnections[$pid] = [
+                    'name' => $processInfo['name'],
+                    'ips' => [],
+                    'connections' => 0,
+                ];
+            }
+
+            $processConnections[$pid] = $this->updateProcessConnectionData($processConnections[$pid], $line);
+        }
+
+        return $processConnections;
+    }
+
+    /**
+     * 从命令行中提取进程信息
+     *
+     * @return array{pid: string, name: string}|null
+     */
+    private function extractProcessInfoFromLine(string $line): ?array
+    {
+        if (1 === preg_match('/pid=(\d+),.*?\("([^"]+)"/', $line, $matches)) {
+            return [
+                'pid' => $matches[1],
+                'name' => $matches[2],
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * 更新进程连接数据
+     *
+     * @param array{name: string, ips: array<string>, connections: int} $processData
+     * @return array{name: string, ips: array<string>, connections: int}
+     */
+    private function updateProcessConnectionData(array $processData, string $line): array
+    {
+        if (1 === preg_match('/ESTAB\s+\d+\s+\d+\s+\S+\s+(\S+):/', $line, $ipMatches)) {
+            $remoteIp = explode(':', $ipMatches[1])[0];
+            if (!in_array($remoteIp, $processData['ips'], true)) {
+                $processData['ips'][] = $remoteIp;
+            }
+            ++$processData['connections'];
+        }
+
+        return $processData;
+    }
+
+    /**
+     * 创建 ProcessInfoVO 对象
+     *
+     * @param array{name: string, ips: array<string>, connections: int} $info
+     */
+    private function createProcessInfoVO(string $pid, array $info): ProcessInfoVO
+    {
+        $resourceUsage = $this->getProcessResourceUsage($pid);
+
+        return new ProcessInfoVO(
+            $pid,
+            $info['name'],
+            count($info['ips']),
+            $info['connections'],
+            1024, // 上传字节数，实际实现需要监控一段时间
+            0, // 下载字节数，实际实现需要监控一段时间
+            $resourceUsage->getCpu(),
+            '其他' // 实际应用可能是地区信息
+        );
     }
 
     /**
@@ -200,13 +250,13 @@ class LinuxAdapter extends AbstractAdapter
         $cpu = 0.0;
         $mem = 0.0;
 
-        $psOutput = $this->executeCommand("ps -p $pid -o %cpu,%mem");
+        $psOutput = $this->executeCommand("ps -p {$pid} -o %cpu,%mem");
 
         if (isset($psOutput[1])) {
             $parts = preg_split('/\s+/', trim($psOutput[1]));
-            if (count($parts) >= 2) {
-                $cpu = (float)$parts[0];
-                $mem = (float)$parts[1];
+            if (is_array($parts) && count($parts) >= 2) {
+                $cpu = (float) $parts[0];
+                $mem = (float) $parts[1];
             }
         }
 
@@ -215,6 +265,8 @@ class LinuxAdapter extends AbstractAdapter
 
     /**
      * 获取连接信息
+     *
+     * @return array{ipCount: int, connCount: int}
      */
     private function getConnectionInfo(string $port): array
     {
@@ -223,14 +275,14 @@ class LinuxAdapter extends AbstractAdapter
             'connCount' => 0,
         ];
 
-        $connCmd = "netstat -an | grep :$port | grep -v LISTEN | awk '{print \$5}' | cut -d: -f1 | sort | uniq -c";
+        $connCmd = "netstat -an | grep :{$port} | grep -v LISTEN | awk '{print \$5}' | cut -d: -f1 | sort | uniq -c";
         $connOutput = $this->executeCommand($connCmd);
 
         foreach ($connOutput as $connLine) {
             preg_match('/\s+(\d+)\s+(\S+)/', $connLine, $connMatches);
-            if (isset($connMatches[1]) && isset($connMatches[2])) {
-                $result['ipCount']++;
-                $result['connCount'] += (int)$connMatches[1];
+            if (isset($connMatches[1], $connMatches[2])) {
+                ++$result['ipCount'];
+                $result['connCount'] += (int) $connMatches[1];
             }
         }
 

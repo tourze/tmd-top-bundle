@@ -1,64 +1,87 @@
 <?php
 
-namespace Tourze\Tests\Command;
+declare(strict_types=1);
 
-use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\BufferedOutput;
+namespace Tourze\TmdTopBundle\Tests\Command;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\Console\Tester\CommandTester;
+use Tourze\PHPUnitSymfonyKernelTest\AbstractCommandTestCase;
 use Tourze\TmdTopBundle\Command\ProcessesCommand;
 
-class ProcessesCommandTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(ProcessesCommand::class)]
+#[RunTestsInSeparateProcesses]
+final class ProcessesCommandTest extends AbstractCommandTestCase
 {
-    private ProcessesCommand $command;
-
-    protected function setUp(): void
+    protected function onSetUp(): void
     {
-        $networkMonitor = $this->createMock(\Tourze\TmdTopBundle\Service\NetworkMonitor::class);
-        $this->command = new ProcessesCommand($networkMonitor);
+        // 集成测试环境设置，这里暂时不需要特殊配置
+    }
+
+    protected function getCommandTester(): CommandTester
+    {
+        $command = self::getContainer()->get(ProcessesCommand::class);
+        $this->assertInstanceOf(ProcessesCommand::class, $command);
+
+        return new CommandTester($command);
     }
 
     public function testCommandConfiguration(): void
     {
-        $this->assertSame('tmd-top:processes', $this->command->getName());
-        $this->assertStringContainsString('显示当前运行的程序', $this->command->getDescription());
+        $command = self::getContainer()->get(ProcessesCommand::class);
+        $this->assertInstanceOf(ProcessesCommand::class, $command);
+
+        $this->assertSame('tmd-top:processes', $command->getName());
+        $this->assertStringContainsString('显示当前运行的程序', $command->getDescription());
     }
 
     public function testExecuteCommand(): void
     {
-        $this->command->executeCallback = function() {
+        $command = self::getContainer()->get(ProcessesCommand::class);
+        $this->assertInstanceOf(ProcessesCommand::class, $command);
+
+        // 设置测试回调来避免交互式终端检查
+        $command->executeCallback = function (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int {
+            // 直接在输出中写入测试内容
+            $output->writeln('进程');
+            $output->writeln('PID 名称 CPU 内存 连接数 地区');
+            $output->writeln('1234 nginx 2.5% 10.3% 2 其他');
+
             return 0;
         };
-        
-        $input = new ArrayInput([]);
-        $output = new BufferedOutput();
 
-        $reflection = new \ReflectionClass($this->command);
-        $method = $reflection->getMethod('execute');
-        $method->setAccessible(true);
-
-        $exitCode = $method->invoke($this->command, $input, $output);
+        $commandTester = new CommandTester($command);
+        $exitCode = $commandTester->execute([]);
 
         $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString('进程', $commandTester->getDisplay());
     }
 
-    public function testExecuteCallback(): void
+    public function testOptionInterval(): void
     {
-        $called = false;
-        $this->command->executeCallback = function() use (&$called) {
-            $called = true;
-            return 0;
-        };
+        $command = self::getContainer()->get(ProcessesCommand::class);
+        $this->assertInstanceOf(ProcessesCommand::class, $command);
+        $command->executeCallback = fn (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int => 0;
 
-        $input = new ArrayInput([]);
-        $output = new BufferedOutput();
+        $tester = new CommandTester($command);
+        $tester->execute(['--interval' => '1', '--count' => '1']);
 
-        $reflection = new \ReflectionClass($this->command);
-        $method = $reflection->getMethod('execute');
-        $method->setAccessible(true);
-
-        $exitCode = $method->invoke($this->command, $input, $output);
-
-        $this->assertTrue($called);
-        $this->assertSame(0, $exitCode);
+        $this->assertSame(0, $tester->getStatusCode());
     }
-} 
+
+    public function testOptionCount(): void
+    {
+        $command = self::getContainer()->get(ProcessesCommand::class);
+        $this->assertInstanceOf(ProcessesCommand::class, $command);
+        $command->executeCallback = fn (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int => 0;
+
+        $tester = new CommandTester($command);
+        $tester->execute(['--count' => '1']);
+
+        $this->assertSame(0, $tester->getStatusCode());
+    }
+}

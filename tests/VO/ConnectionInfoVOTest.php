@@ -1,11 +1,18 @@
 <?php
 
-namespace Tourze\Tests\VO;
+declare(strict_types=1);
 
+namespace Tourze\TmdTopBundle\Tests\VO;
+
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\TmdTopBundle\VO\ConnectionInfoVO;
 
-class ConnectionInfoVOTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(ConnectionInfoVO::class)]
+final class ConnectionInfoVOTest extends TestCase
 {
     public function testConstructor(): void
     {
@@ -78,4 +85,4 @@ class ConnectionInfoVOTest extends TestCase
         $this->assertSame(0, $vo->getDownloadBytes());
         $this->assertSame('未知', $vo->getLocation());
     }
-} 
+}

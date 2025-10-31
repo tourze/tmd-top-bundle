@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\TmdTopBundle\Service;
 
 use Doctrine\Common\Collections\Collection;
@@ -13,7 +15,7 @@ use Tourze\TmdTopBundle\VO\ProcessInfoVO;
 use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
 use Tourze\TmdTopBundle\VO\ServiceInfoVO;
 
-class NetworkMonitor
+class NetworkMonitor implements NetworkMonitorInterface
 {
     private readonly AdapterInterface $adapter;
 
@@ -61,7 +63,7 @@ class NetworkMonitor
     {
         return $this->adapter->getProcessesInfo();
     }
-    
+
     /**
      * 获取进程的资源使用情况
      */
@@ -75,11 +77,11 @@ class NetworkMonitor
      */
     public function isPrivateIp(string $ip): bool
     {
-        return filter_var(
+        return false === filter_var(
             $ip,
             FILTER_VALIDATE_IP,
             FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-        ) === false;
+        );
     }
 
     /**
@@ -88,7 +90,7 @@ class NetworkMonitor
     private function createAdapter(): AdapterInterface
     {
         $os = PHP_OS_FAMILY;
-        
+
         return match ($os) {
             'Windows' => new WindowsAdapter(),
             'Darwin' => new MacOSAdapter(),

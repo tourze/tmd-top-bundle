@@ -1,6 +1,8 @@
 <?php
 
-namespace Tourze\TmdTopBundle\Tests\Unit\Adapter;
+declare(strict_types=1);
+
+namespace Tourze\TmdTopBundle\Tests\Adapter;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -20,27 +22,27 @@ class TestAdapter implements AdapterInterface
      * @var Collection<int, NetcardInfoVO>
      */
     private Collection $netcardInfo;
-    
+
     /**
      * @var Collection<int, ServiceInfoVO>
      */
     private Collection $servicesInfo;
-    
+
     /**
      * @var Collection<int, ConnectionInfoVO>
      */
     private Collection $connectionsInfo;
-    
+
     /**
      * @var Collection<int, ProcessInfoVO>
      */
     private Collection $processesInfo;
-    
+
     /**
      * @var array<string, ProcessResourceUsageVO>
      */
     private array $processResourceUsage = [];
-    
+
     public function __construct()
     {
         $this->netcardInfo = new ArrayCollection();
@@ -48,7 +50,7 @@ class TestAdapter implements AdapterInterface
         $this->connectionsInfo = new ArrayCollection();
         $this->processesInfo = new ArrayCollection();
     }
-    
+
     /**
      * 设置网卡信息测试数据
      *
@@ -58,7 +60,7 @@ class TestAdapter implements AdapterInterface
     {
         $this->netcardInfo = $netcardInfo;
     }
-    
+
     /**
      * 设置服务信息测试数据
      *
@@ -68,7 +70,7 @@ class TestAdapter implements AdapterInterface
     {
         $this->servicesInfo = $servicesInfo;
     }
-    
+
     /**
      * 设置连接信息测试数据
      *
@@ -78,7 +80,7 @@ class TestAdapter implements AdapterInterface
     {
         $this->connectionsInfo = $connectionsInfo;
     }
-    
+
     /**
      * 设置进程信息测试数据
      *
@@ -88,18 +90,15 @@ class TestAdapter implements AdapterInterface
     {
         $this->processesInfo = $processesInfo;
     }
-    
+
     /**
      * 设置进程资源使用情况测试数据
-     *
-     * @param string $pid
-     * @param ProcessResourceUsageVO $usage
      */
     public function setProcessResourceUsage(string $pid, ProcessResourceUsageVO $usage): void
     {
         $this->processResourceUsage[$pid] = $usage;
     }
-    
+
     /**
      * 获取网卡信息
      *
@@ -109,7 +108,7 @@ class TestAdapter implements AdapterInterface
     {
         return $this->netcardInfo;
     }
-    
+
     /**
      * 获取监听服务信息
      *
@@ -119,7 +118,7 @@ class TestAdapter implements AdapterInterface
     {
         return $this->servicesInfo;
     }
-    
+
     /**
      * 获取连接信息
      *
@@ -129,7 +128,7 @@ class TestAdapter implements AdapterInterface
     {
         return $this->connectionsInfo;
     }
-    
+
     /**
      * 获取进程信息
      *
@@ -139,7 +138,7 @@ class TestAdapter implements AdapterInterface
     {
         return $this->processesInfo;
     }
-    
+
     /**
      * 获取进程的资源使用情况
      */
@@ -147,4 +146,4 @@ class TestAdapter implements AdapterInterface
     {
         return $this->processResourceUsage[$pid] ?? new ProcessResourceUsageVO(0.0, 0.0);
     }
-} 
+}

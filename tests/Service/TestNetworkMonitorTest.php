@@ -1,19 +1,33 @@
 <?php
 
-namespace Tourze\TmdTopBundle\Tests\Unit\Service;
+declare(strict_types=1);
+
+namespace Tourze\TmdTopBundle\Tests\Service;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\TmdTopBundle\Adapter\AdapterInterface;
-use Tourze\TmdTopBundle\Tests\Unit\Service\TestNetworkMonitor;
+use Tourze\TmdTopBundle\Tests\Service\TestNetworkMonitor;
 use Tourze\TmdTopBundle\VO\ConnectionInfoVO;
 use Tourze\TmdTopBundle\VO\NetcardInfoVO;
 use Tourze\TmdTopBundle\VO\ProcessInfoVO;
 use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
 use Tourze\TmdTopBundle\VO\ServiceInfoVO;
 
-class TestNetworkMonitorTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(TestNetworkMonitor::class)]
+final class TestNetworkMonitorTest extends TestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // TestNetworkMonitor测试不需要特殊设置
+    }
+
     public function testConstructorWithAdapter(): void
     {
         $adapter = $this->createMock(AdapterInterface::class);
@@ -22,16 +36,17 @@ class TestNetworkMonitorTest extends TestCase
         $this->assertInstanceOf(TestNetworkMonitor::class, $monitor);
     }
 
-        public function testGetNetcardInfoDelegatestoAdapter(): void
+    public function testGetNetcardInfoDelegatestoAdapter(): void
     {
         $expectedCollection = new ArrayCollection([
-            new NetcardInfoVO('eth0', 1024, 2048)
+            new NetcardInfoVO('eth0', 1024, 2048),
         ]);
 
         $adapter = $this->createMock(AdapterInterface::class);
         $adapter->expects($this->once())
             ->method('getNetcardInfo')
-            ->willReturn($expectedCollection);
+            ->willReturn($expectedCollection)
+        ;
 
         $monitor = new TestNetworkMonitor($adapter);
         $result = $monitor->getNetcardInfo();
@@ -39,16 +54,17 @@ class TestNetworkMonitorTest extends TestCase
         $this->assertSame($expectedCollection, $result);
     }
 
-        public function testGetServicesInfoDelegatestoAdapter(): void
+    public function testGetServicesInfoDelegatestoAdapter(): void
     {
         $expectedCollection = new ArrayCollection([
-            new ServiceInfoVO('1234', 'nginx', '0.0.0.0', '80', 5, 10, 1024, 2048, 25.5, 64.2)
+            new ServiceInfoVO('1234', 'nginx', '0.0.0.0', '80', 5, 10, 1024, 2048, 25.5, 64.2),
         ]);
 
         $adapter = $this->createMock(AdapterInterface::class);
         $adapter->expects($this->once())
             ->method('getServicesInfo')
-            ->willReturn($expectedCollection);
+            ->willReturn($expectedCollection)
+        ;
 
         $monitor = new TestNetworkMonitor($adapter);
         $result = $monitor->getServicesInfo();
@@ -56,16 +72,17 @@ class TestNetworkMonitorTest extends TestCase
         $this->assertSame($expectedCollection, $result);
     }
 
-        public function testGetConnectionsInfoDelegatestoAdapter(): void
+    public function testGetConnectionsInfoDelegatestoAdapter(): void
     {
         $expectedCollection = new ArrayCollection([
-            new ConnectionInfoVO('192.168.1.1', '8080', 1024, 2048, '中国')
+            new ConnectionInfoVO('192.168.1.1', '8080', 1024, 2048, '中国'),
         ]);
 
         $adapter = $this->createMock(AdapterInterface::class);
         $adapter->expects($this->once())
             ->method('getConnectionsInfo')
-            ->willReturn($expectedCollection);
+            ->willReturn($expectedCollection)
+        ;
 
         $monitor = new TestNetworkMonitor($adapter);
         $result = $monitor->getConnectionsInfo();
@@ -73,16 +90,17 @@ class TestNetworkMonitorTest extends TestCase
         $this->assertSame($expectedCollection, $result);
     }
 
-        public function testGetProcessesInfoDelegatestoAdapter(): void
+    public function testGetProcessesInfoDelegatestoAdapter(): void
     {
         $expectedCollection = new ArrayCollection([
-            new ProcessInfoVO('1234', 'nginx', 5, 10, 1024, 2048, 25.5, '中国')
+            new ProcessInfoVO('1234', 'nginx', 5, 10, 1024, 2048, 25.5, '中国'),
         ]);
 
         $adapter = $this->createMock(AdapterInterface::class);
         $adapter->expects($this->once())
             ->method('getProcessesInfo')
-            ->willReturn($expectedCollection);
+            ->willReturn($expectedCollection)
+        ;
 
         $monitor = new TestNetworkMonitor($adapter);
         $result = $monitor->getProcessesInfo();
@@ -90,7 +108,7 @@ class TestNetworkMonitorTest extends TestCase
         $this->assertSame($expectedCollection, $result);
     }
 
-        public function testGetProcessResourceUsageDelegatestoAdapter(): void
+    public function testGetProcessResourceUsageDelegatestoAdapter(): void
     {
         $expectedUsage = new ProcessResourceUsageVO(25.5, 64.2);
 
@@ -98,7 +116,8 @@ class TestNetworkMonitorTest extends TestCase
         $adapter->expects($this->once())
             ->method('getProcessResourceUsage')
             ->with('1234')
-            ->willReturn($expectedUsage);
+            ->willReturn($expectedUsage)
+        ;
 
         $monitor = new TestNetworkMonitor($adapter);
         $result = $monitor->getProcessResourceUsage('1234');

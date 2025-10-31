@@ -1,11 +1,18 @@
 <?php
 
-namespace Tourze\Tests\VO;
+declare(strict_types=1);
 
+namespace Tourze\TmdTopBundle\Tests\VO;
+
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\TmdTopBundle\VO\NetcardInfoVO;
 
-class NetcardInfoVOTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(NetcardInfoVO::class)]
+final class NetcardInfoVOTest extends TestCase
 {
     public function testConstructor(): void
     {
@@ -63,4 +70,4 @@ class NetcardInfoVOTest extends TestCase
         $this->assertSame(0, $vo->getUploadBytes());
         $this->assertSame(0, $vo->getDownloadBytes());
     }
-} 
+}

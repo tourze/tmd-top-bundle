@@ -1,11 +1,18 @@
 <?php
 
-namespace Tourze\Tests\VO;
+declare(strict_types=1);
 
+namespace Tourze\TmdTopBundle\Tests\VO;
+
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\TmdTopBundle\VO\ProcessInfoVO;
 
-class ProcessInfoVOTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(ProcessInfoVO::class)]
+final class ProcessInfoVOTest extends TestCase
 {
     public function testConstructor(): void
     {
@@ -99,4 +106,4 @@ class ProcessInfoVOTest extends TestCase
         $this->assertSame(0.0, $vo->getCpuUsage());
         $this->assertSame('', $vo->getRegion());
     }
-} 
+}

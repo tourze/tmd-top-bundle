@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tourze\TmdTopBundle\Adapter;
+namespace Tourze\TmdTopBundle\Service;
 
 use Doctrine\Common\Collections\Collection;
 use Tourze\TmdTopBundle\VO\ConnectionInfoVO;
@@ -11,7 +11,7 @@ use Tourze\TmdTopBundle\VO\ProcessInfoVO;
 use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
 use Tourze\TmdTopBundle\VO\ServiceInfoVO;
 
-interface AdapterInterface
+interface NetworkMonitorInterface
 {
     /**
      * 获取网卡信息
@@ -45,4 +45,9 @@ interface AdapterInterface
      * 获取进程的资源使用情况
      */
     public function getProcessResourceUsage(string $pid): ProcessResourceUsageVO;
+
+    /**
+     * 检查IP是否为私有IP
+     */
+    public function isPrivateIp(string $ip): bool;
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\TmdTopBundle\Adapter;
 
 abstract class AbstractAdapter implements AdapterInterface
@@ -9,11 +11,11 @@ abstract class AbstractAdapter implements AdapterInterface
      */
     protected function isPrivateIp(string $ip): bool
     {
-        return filter_var(
-                $ip,
-                FILTER_VALIDATE_IP,
-                FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
-            ) === false;
+        return false === filter_var(
+            $ip,
+            FILTER_VALIDATE_IP,
+            FILTER_FLAG_IPV4 | FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+        );
     }
 
     /**
@@ -26,6 +28,8 @@ abstract class AbstractAdapter implements AdapterInterface
 
     /**
      * 执行命令并返回结果
+     *
+     * @return array<string>
      */
     protected function executeCommand(string $command): array
     {
@@ -33,6 +37,6 @@ abstract class AbstractAdapter implements AdapterInterface
         $returnCode = 0;
         exec($command . ' 2>/dev/null', $output, $returnCode);
 
-        return $returnCode === 0 ? $output : [];
+        return 0 === $returnCode ? $output : [];
     }
 }

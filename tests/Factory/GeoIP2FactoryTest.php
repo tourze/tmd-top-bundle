@@ -1,12 +1,19 @@
 <?php
 
-namespace Tourze\Tests\Factory;
+declare(strict_types=1);
+
+namespace Tourze\TmdTopBundle\Tests\Factory;
 
 use GeoIp2\Database\Reader;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Tourze\TmdTopBundle\Factory\GeoIP2Factory;
 
-class GeoIP2FactoryTest extends TestCase
+/**
+ * @internal
+ */
+#[CoversClass(GeoIP2Factory::class)]
+final class GeoIP2FactoryTest extends TestCase
 {
     public function testCreate(): void
     {
@@ -26,4 +33,4 @@ class GeoIP2FactoryTest extends TestCase
         $this->assertInstanceOf(Reader::class, $reader2);
         $this->assertNotSame($reader1, $reader2);
     }
-} 
+}

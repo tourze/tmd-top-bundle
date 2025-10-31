@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tourze\TmdTopBundle\Adapter;
 
 use Doctrine\Common\Collections\ArrayCollection;
@@ -27,12 +29,12 @@ class WindowsAdapter extends AbstractAdapter
 
         // 跳过CSV头行
         if (count($output) > 1) {
-            for ($i = 1; $i < count($output); $i++) {
-                $row = str_getcsv($output[$i]);
+            for ($i = 1; $i < count($output); ++$i) {
+                $row = str_getcsv($output[$i], ',', '"', '\\');
                 if (count($row) >= 3) {
-                    $name = $row[0];
-                    $txBytes = (int)$row[1];
-                    $rxBytes = (int)$row[2];
+                    $name = (string) $row[0];
+                    $txBytes = (int) $row[1];
+                    $rxBytes = (int) $row[2];
 
                     $netcardInfo = new NetcardInfoVO($name, $txBytes, $rxBytes);
                     $collection->add($netcardInfo);
@@ -60,7 +62,7 @@ class WindowsAdapter extends AbstractAdapter
 
         foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) < 5) {
+            if (!is_array($parts) || count($parts) < 5) {
                 continue;
             }
 
@@ -68,7 +70,7 @@ class WindowsAdapter extends AbstractAdapter
 
             // 解析IP和端口
             [$ip, $port] = explode(':', $localAddr);
-            $ip = $ip === '0.0.0.0' ? '*' : $ip;
+            $ip = '0.0.0.0' === $ip ? '*' : $ip;
 
             // 使用tasklist获取进程名称
             $processInfo = $this->getProcessNameByPid($pid);
@@ -118,7 +120,7 @@ class WindowsAdapter extends AbstractAdapter
 
         foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) < 5) {
+            if (!is_array($parts) || count($parts) < 5) {
                 continue;
             }
 
@@ -128,7 +130,7 @@ class WindowsAdapter extends AbstractAdapter
             [$remoteIp, $remotePort] = explode(':', $foreignAddr);
 
             // 排除本地连接
-            if ($remoteIp === '127.0.0.1') {
+            if ('127.0.0.1' === $remoteIp) {
                 continue;
             }
 
@@ -163,7 +165,7 @@ class WindowsAdapter extends AbstractAdapter
 
         foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) < 5) {
+            if (!is_array($parts) || count($parts) < 5) {
                 continue;
             }
 
@@ -181,18 +183,20 @@ class WindowsAdapter extends AbstractAdapter
                 ];
             }
 
-            if (!in_array($remoteIp, $processConnections[$pid]['ips'])) {
+            if (!in_array($remoteIp, $processConnections[$pid]['ips'], true)) {
                 $processConnections[$pid]['ips'][] = $remoteIp;
             }
-            $processConnections[$pid]['connections']++;
+            ++$processConnections[$pid]['connections'];
         }
 
         // 获取进程资源使用情况并组装最终结果
         foreach ($processConnections as $pid => $info) {
-            $resourceUsage = $this->getProcessResourceUsage($pid);
+            /** @phpstan-ignore-next-line cast.useless (PHP automatically converts numeric string keys to int) */
+            $pidString = (string) $pid;
+            $resourceUsage = $this->getProcessResourceUsage($pidString);
 
             $processInfo = new ProcessInfoVO(
-                $pid,
+                $pidString,
                 $info['name'],
                 count($info['ips']),
                 $info['connections'],
@@ -217,15 +221,15 @@ class WindowsAdapter extends AbstractAdapter
         $mem = 0.0;
 
         // 使用 PowerShell 获取进程 CPU 和内存使用率
-        $command = "powershell.exe \"Get-Process -Id $pid | Select-Object CPU, @{Name='WorkingSetMB';Expression={\$_.WorkingSet/1MB}} | ConvertTo-Csv -NoTypeInformation\"";
+        $command = "powershell.exe \"Get-Process -Id {$pid} | Select-Object CPU, @{Name='WorkingSetMB';Expression={\$_.WorkingSet/1MB}} | ConvertTo-Csv -NoTypeInformation\"";
         $output = $this->executeCommand($command);
 
         if (count($output) > 1) {
-            $row = str_getcsv($output[1]);
+            $row = str_getcsv($output[1], ',', '"', '\\');
             if (count($row) >= 2) {
-                $cpu = (float)$row[0] / 100; // 转换为百分比
+                $cpu = (float) $row[0] / 100; // 转换为百分比
                 $totalMem = $this->getTotalMemory();
-                $usedMem = (float)$row[1];
+                $usedMem = (float) $row[1];
                 $mem = $totalMem > 0 ? ($usedMem / $totalMem) * 100 : 0;
             }
         }
@@ -235,10 +239,12 @@ class WindowsAdapter extends AbstractAdapter
 
     /**
      * 通过PID获取进程名称
+     *
+     * @return array{name: string, memUsage: string}
      */
     private function getProcessNameByPid(string $pid): array
     {
-        $command = "tasklist /FI \"PID eq $pid\" /FO CSV /NH";
+        $command = "tasklist /FI \"PID eq {$pid}\" /FO CSV /NH";
         $output = $this->executeCommand($command);
 
         $result = [
@@ -247,10 +253,10 @@ class WindowsAdapter extends AbstractAdapter
         ];
 
         if (count($output) > 0) {
-            $row = str_getcsv($output[0]);
+            $row = str_getcsv($output[0], ',', '"', '\\');
             if (count($row) >= 5) {
-                $result['name'] = $row[0];
-                $result['memUsage'] = $row[4];
+                $result['name'] = (string) $row[0];
+                $result['memUsage'] = (string) $row[4];
             }
         }
 
@@ -259,10 +265,12 @@ class WindowsAdapter extends AbstractAdapter
 
     /**
      * 获取指定端口的连接信息
+     *
+     * @return array{ipCount: int, connCount: int}
      */
     private function getConnectionInfoByPort(string $port): array
     {
-        $command = "netstat -ano | findstr :$port | findstr ESTABLISHED";
+        $command = "netstat -ano | findstr :{$port} | findstr ESTABLISHED";
         $output = $this->executeCommand($command);
 
         $result = [
@@ -273,18 +281,19 @@ class WindowsAdapter extends AbstractAdapter
         $uniqueIps = [];
         foreach ($output as $line) {
             $parts = preg_split('/\s+/', trim($line));
-            if (count($parts) >= 5) {
+            if (is_array($parts) && count($parts) >= 5) {
                 [$proto, $localAddr, $foreignAddr, $state, $pid] = $parts;
                 [$remoteIp, $remotePort] = explode(':', $foreignAddr);
 
-                if (!in_array($remoteIp, $uniqueIps)) {
+                if (!in_array($remoteIp, $uniqueIps, true)) {
                     $uniqueIps[] = $remoteIp;
                 }
-                $result['connCount']++;
+                ++$result['connCount'];
             }
         }
 
         $result['ipCount'] = count($uniqueIps);
+
         return $result;
     }
 
@@ -296,6 +305,6 @@ class WindowsAdapter extends AbstractAdapter
         $command = 'powershell.exe "(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1MB"';
         $output = $this->executeCommand($command);
 
-        return count($output) > 0 ? (float)$output[0] : 0;
+        return count($output) > 0 ? (float) $output[0] : 0;
     }
 }

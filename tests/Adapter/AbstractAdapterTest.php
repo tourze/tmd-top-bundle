@@ -1,26 +1,35 @@
 <?php
 
-namespace Tourze\TmdTopBundle\Tests\Unit\Adapter;
+declare(strict_types=1);
 
+namespace Tourze\TmdTopBundle\Tests\Adapter;
+
+use Doctrine\Common\Collections\Collection;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
 
 /**
  * 测试 AbstractAdapter 的具体实现
+ *
+ * @internal
  */
-class AbstractAdapterTest extends TestCase
+#[CoversClass(TestAbstractAdapter::class)]
+final class AbstractAdapterTest extends TestCase
 {
     private TestAbstractAdapter $adapter;
 
     protected function setUp(): void
     {
         parent::setUp();
+
         $this->adapter = new TestAbstractAdapter();
     }
 
     /**
      * 测试私有IP检测 - 测试私有IP地址
      */
-    public function testIsPrivateIp_withPrivateIp_returnsTrue(): void
+    public function testPublicIsPrivateIpWithPrivateIpReturnsTrue(): void
     {
         // 测试常见的私有IP地址
         $privateIps = [
@@ -33,7 +42,7 @@ class AbstractAdapterTest extends TestCase
         foreach ($privateIps as $ip) {
             $this->assertTrue(
                 $this->adapter->publicIsPrivateIp($ip),
-                "IP $ip should be identified as private"
+                "IP {$ip} should be identified as private"
             );
         }
     }
@@ -41,7 +50,7 @@ class AbstractAdapterTest extends TestCase
     /**
      * 测试私有IP检测 - 测试公共IP地址
      */
-    public function testIsPrivateIp_withPublicIp_returnsFalse(): void
+    public function testPublicIsPrivateIpWithPublicIpReturnsFalse(): void
     {
         // 测试公共IP地址
         $publicIps = [
@@ -53,7 +62,7 @@ class AbstractAdapterTest extends TestCase
         foreach ($publicIps as $ip) {
             $this->assertFalse(
                 $this->adapter->publicIsPrivateIp($ip),
-                "IP $ip should be identified as public"
+                "IP {$ip} should be identified as public"
             );
         }
     }
@@ -61,7 +70,7 @@ class AbstractAdapterTest extends TestCase
     /**
      * 测试字节转KB格式化 - 整数KB
      */
-    public function testFormatBytesToKB_withWholeKilobytes(): void
+    public function testPublicFormatBytesToKBWithWholeKilobytes(): void
     {
         $this->assertEquals('1 KB', $this->adapter->publicFormatBytesToKB(1024));
         $this->assertEquals('2 KB', $this->adapter->publicFormatBytesToKB(2048));
@@ -71,7 +80,7 @@ class AbstractAdapterTest extends TestCase
     /**
      * 测试字节转KB格式化 - 小数KB
      */
-    public function testFormatBytesToKB_withFractionalKilobytes(): void
+    public function testPublicFormatBytesToKBWithFractionalKilobytes(): void
     {
         $this->assertEquals('1.5 KB', $this->adapter->publicFormatBytesToKB(1536));
         $this->assertEquals('0.5 KB', $this->adapter->publicFormatBytesToKB(512));
@@ -81,7 +90,7 @@ class AbstractAdapterTest extends TestCase
     /**
      * 测试字节转KB格式化 - 边界值
      */
-    public function testFormatBytesToKB_withBoundaryValues(): void
+    public function testPublicFormatBytesToKBWithBoundaryValues(): void
     {
         $this->assertEquals('0 KB', $this->adapter->publicFormatBytesToKB(0));
         $this->assertEquals('0 KB', $this->adapter->publicFormatBytesToKB(1));
@@ -91,11 +100,11 @@ class AbstractAdapterTest extends TestCase
     /**
      * 测试执行命令 - 成功的命令
      */
-    public function testExecuteCommand_withSuccessfulCommand(): void
+    public function testPublicExecuteCommandWithSuccessfulCommand(): void
     {
         // 使用一个简单的、跨平台的命令
         $result = $this->adapter->publicExecuteCommand('echo "test"');
-        
+
         $this->assertNotEmpty($result);
         $this->assertStringContainsString('test', $result[0]);
     }
@@ -103,11 +112,11 @@ class AbstractAdapterTest extends TestCase
     /**
      * 测试执行命令 - 失败的命令
      */
-    public function testExecuteCommand_withFailedCommand(): void
+    public function testPublicExecuteCommandWithFailedCommand(): void
     {
         // 使用一个不存在的命令
         $result = $this->adapter->publicExecuteCommand('nonexistentcommand123456');
-        
+
         $this->assertEmpty($result);
     }
 
@@ -116,10 +125,10 @@ class AbstractAdapterTest extends TestCase
      */
     public function testInterfaceImplementation(): void
     {
-        $this->assertInstanceOf(\Doctrine\Common\Collections\Collection::class, $this->adapter->getNetcardInfo());
-        $this->assertInstanceOf(\Doctrine\Common\Collections\Collection::class, $this->adapter->getServicesInfo());
-        $this->assertInstanceOf(\Doctrine\Common\Collections\Collection::class, $this->adapter->getConnectionsInfo());
-        $this->assertInstanceOf(\Doctrine\Common\Collections\Collection::class, $this->adapter->getProcessesInfo());
-        $this->assertInstanceOf(\Tourze\TmdTopBundle\VO\ProcessResourceUsageVO::class, $this->adapter->getProcessResourceUsage('test'));
+        $this->assertInstanceOf(Collection::class, $this->adapter->getNetcardInfo());
+        $this->assertInstanceOf(Collection::class, $this->adapter->getServicesInfo());
+        $this->assertInstanceOf(Collection::class, $this->adapter->getConnectionsInfo());
+        $this->assertInstanceOf(Collection::class, $this->adapter->getProcessesInfo());
+        $this->assertInstanceOf(ProcessResourceUsageVO::class, $this->adapter->getProcessResourceUsage('test'));
     }
 }
