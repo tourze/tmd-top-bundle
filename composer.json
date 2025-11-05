@@ -7,7 +7,7 @@
     "chrisullyott/php-filesize": "^4.2",
     "doctrine/collections": "^2.3",
     "geoip2/geoip2": "^3.2",
-    "leo108/geolite2-db": "v2.222.0",
+    "leo108/geolite2-db": "2.*",
     "symfony/config": "^7.3",
     "symfony/console": "^7.3",
     "symfony/dependency-injection": "^7.3",
