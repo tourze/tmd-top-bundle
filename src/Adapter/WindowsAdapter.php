@@ -191,7 +191,6 @@ class WindowsAdapter extends AbstractAdapter
 
         // 获取进程资源使用情况并组装最终结果
         foreach ($processConnections as $pid => $info) {
-            /** @phpstan-ignore-next-line cast.useless (PHP automatically converts numeric string keys to int) */
             $pidString = (string) $pid;
             $resourceUsage = $this->getProcessResourceUsage($pidString);
 

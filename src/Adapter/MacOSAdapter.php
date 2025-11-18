@@ -12,9 +12,6 @@ use Tourze\TmdTopBundle\VO\ProcessInfoVO;
 use Tourze\TmdTopBundle\VO\ProcessResourceUsageVO;
 use Tourze\TmdTopBundle\VO\ServiceInfoVO;
 
-/**
- * @phpstan-ignore-next-line symplify.cognitiveComplexity
- */
 class MacOSAdapter extends AbstractAdapter
 {
     /**
