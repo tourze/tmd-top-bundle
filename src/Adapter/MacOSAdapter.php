@@ -354,11 +354,12 @@ class MacOSAdapter extends AbstractAdapter
      *
      * @param array{name: string, ips: array<int, string>, connections: int} $info
      */
-    private function createProcessInfo(string $pid, array $info): ProcessInfoVO
+    private function createProcessInfo(string|int $pid, array $info): ProcessInfoVO
     {
-        $resourceUsage = $this->getProcessResourceUsage($pid);
+        $pidString = (string) $pid;
+        $resourceUsage = $this->getProcessResourceUsage($pidString);
 
-        return $this->buildProcessInfoVO($pid, $info, $resourceUsage);
+        return $this->buildProcessInfoVO($pidString, $info, $resourceUsage);
     }
 
     /**
