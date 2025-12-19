@@ -6,7 +6,7 @@ namespace Tourze\TmdTopBundle\DependencyInjection;
 
 use Tourze\SymfonyDependencyServiceLoader\AutoExtension;
 
-class TmdTopExtension extends AutoExtension
+final class TmdTopExtension extends AutoExtension
 {
     protected function getConfigDir(): string
     {

@@ -5,21 +5,25 @@ declare(strict_types=1);
 namespace Tourze\TmdTopBundle\Tests\Command;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Tourze\PHPUnitSymfonyKernelTest\AbstractCommandTestCase;
 use Tourze\TmdTopBundle\Command\NetcardCommand;
 
 /**
+ * NetcardCommand 集成测试
+ *
  * @internal
  */
 #[CoversClass(NetcardCommand::class)]
 #[RunTestsInSeparateProcesses]
+#[Group('integration')]
 final class NetcardCommandTest extends AbstractCommandTestCase
 {
     protected function onSetUp(): void
     {
-        // 集成测试环境设置，这里暂时不需要特殊配置
     }
 
     protected function getCommandTester(): CommandTester
@@ -41,47 +45,35 @@ final class NetcardCommandTest extends AbstractCommandTestCase
 
     public function testExecuteCommand(): void
     {
-        $command = self::getContainer()->get(NetcardCommand::class);
-        $this->assertInstanceOf(NetcardCommand::class, $command);
+        $tester = $this->getCommandTester();
 
-        // 设置测试回调来避免交互式终端检查
-        $command->executeCallback = function (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int {
-            // 直接在输出中写入测试内容
-            $output->writeln('网卡');
-            $output->writeln('名称 接收字节 发送字节');
-            $output->writeln('eth0 1024 2048');
+        // 命令需要 ConsoleOutputInterface，在非交互式环境下会返回 FAILURE
+        $exitCode = $tester->execute([]);
 
-            return 0;
-        };
-
-        $commandTester = new CommandTester($command);
-        $exitCode = $commandTester->execute([]);
-
-        $this->assertSame(0, $exitCode);
-        $this->assertStringContainsString('网卡', $commandTester->getDisplay());
+        // 非交互式终端返回 FAILURE 是预期行为
+        $this->assertSame(Command::FAILURE, $exitCode);
+        $this->assertStringContainsString('interactive terminal', $tester->getDisplay());
     }
 
     public function testOptionInterval(): void
     {
         $command = self::getContainer()->get(NetcardCommand::class);
         $this->assertInstanceOf(NetcardCommand::class, $command);
-        $command->executeCallback = fn (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int => 0;
 
-        $tester = new CommandTester($command);
-        $tester->execute(['--interval' => '1', '--count' => '1']);
-
-        $this->assertSame(0, $tester->getStatusCode());
+        // 验证 interval 选项存在
+        $definition = $command->getDefinition();
+        $this->assertTrue($definition->hasOption('interval'));
+        $this->assertSame('i', $definition->getOption('interval')->getShortcut());
     }
 
     public function testOptionCount(): void
     {
         $command = self::getContainer()->get(NetcardCommand::class);
         $this->assertInstanceOf(NetcardCommand::class, $command);
-        $command->executeCallback = fn (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int => 0;
 
-        $tester = new CommandTester($command);
-        $tester->execute(['--count' => '1']);
-
-        $this->assertSame(0, $tester->getStatusCode());
+        // 验证 count 选项存在
+        $definition = $command->getDefinition();
+        $this->assertTrue($definition->hasOption('count'));
+        $this->assertSame('c', $definition->getOption('count')->getShortcut());
     }
 }

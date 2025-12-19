@@ -22,13 +22,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  */
 abstract class AbstractRealtimeCommand extends Command
 {
-    /**
-     * 用于测试的回调，允许在测试中替换 execute 方法
-     *
-     * @var callable|null
-     */
-    public $executeCallback;
-
     protected function configure(): void
     {
         $this
@@ -62,13 +55,6 @@ abstract class AbstractRealtimeCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        // 如果存在测试回调，则使用回调替代原始执行逻辑
-        if (is_callable($this->executeCallback)) {
-            $result = call_user_func($this->executeCallback, $input, $output);
-            assert(is_int($result), 'Execute callback must return int');
-            return $result;
-        }
-
         $intervalValue = $input->getOption('interval');
         $countValue = $input->getOption('count');
 

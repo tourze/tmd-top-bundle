@@ -21,9 +21,6 @@ class ConnectionsCommand extends AbstractRealtimeCommand
     public const NAME = 'tmd-top:connections';
     public const DESCRIPTION = '显示网络连接信息，支持实时更新模式';
 
-    /** @var (callable)|null */
-    public $executeCallback;
-
     public function __construct(
         private readonly NetworkMonitorInterface $networkMonitor,
         private readonly string $geoDbPath = '',

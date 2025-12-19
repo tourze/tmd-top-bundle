@@ -190,7 +190,8 @@ class WindowsAdapter extends AbstractAdapter
         }
 
         // 获取进程资源使用情况并组装最终结果
-        foreach ($processConnections as $pid => $info) {
+        foreach (array_keys($processConnections) as $pid) {
+            $info = $processConnections[$pid];
             $pidString = (string) $pid;
             $resourceUsage = $this->getProcessResourceUsage($pidString);
 

@@ -5,22 +5,25 @@ declare(strict_types=1);
 namespace Tourze\TmdTopBundle\Tests\Command;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 use Tourze\PHPUnitSymfonyKernelTest\AbstractCommandTestCase;
 use Tourze\TmdTopBundle\Command\ConnectionsCommand;
 
 /**
+ * ConnectionsCommand 集成测试
+ *
  * @internal
  */
 #[CoversClass(ConnectionsCommand::class)]
 #[RunTestsInSeparateProcesses]
+#[Group('integration')]
 final class ConnectionsCommandTest extends AbstractCommandTestCase
 {
     protected function onSetUp(): void
     {
-        // 集成测试环境设置，这里暂时不需要特殊配置
-        // 如果遇到数据库问题，我们希望测试能够继续运行
     }
 
     protected function getCommandTester(): CommandTester
@@ -42,24 +45,14 @@ final class ConnectionsCommandTest extends AbstractCommandTestCase
 
     public function testExecuteCommand(): void
     {
-        $command = self::getContainer()->get(ConnectionsCommand::class);
-        $this->assertInstanceOf(ConnectionsCommand::class, $command);
+        $tester = $this->getCommandTester();
 
-        // 设置测试回调来避免交互式终端检查
-        $command->executeCallback = function (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int {
-            // 直接在输出中写入测试内容
-            $output->writeln('连接详情');
-            $output->writeln('客户端IP 端口 上传速率 下载速率 地区');
-            $output->writeln('192.168.1.1 80 1KB 2KB 未知');
+        // 命令需要 ConsoleOutputInterface，在非交互式环境下会返回 FAILURE
+        $exitCode = $tester->execute([]);
 
-            return 0;
-        };
-
-        $commandTester = new CommandTester($command);
-        $exitCode = $commandTester->execute([]);
-
-        $this->assertSame(0, $exitCode);
-        $this->assertStringContainsString('连接详情', $commandTester->getDisplay());
+        // 非交互式终端返回 FAILURE 是预期行为
+        $this->assertSame(Command::FAILURE, $exitCode);
+        $this->assertStringContainsString('interactive terminal', $tester->getDisplay());
     }
 
     public function testOptionInterval(): void
@@ -67,13 +60,10 @@ final class ConnectionsCommandTest extends AbstractCommandTestCase
         $command = self::getContainer()->get(ConnectionsCommand::class);
         $this->assertInstanceOf(ConnectionsCommand::class, $command);
 
-        // 避免交互式终端检查
-        $command->executeCallback = fn (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int => 0;
-
-        $tester = new CommandTester($command);
-        $tester->execute(['--interval' => '1', '--count' => '1']);
-
-        $this->assertSame(0, $tester->getStatusCode());
+        // 验证 interval 选项存在
+        $definition = $command->getDefinition();
+        $this->assertTrue($definition->hasOption('interval'));
+        $this->assertSame('i', $definition->getOption('interval')->getShortcut());
     }
 
     public function testOptionCount(): void
@@ -81,12 +71,9 @@ final class ConnectionsCommandTest extends AbstractCommandTestCase
         $command = self::getContainer()->get(ConnectionsCommand::class);
         $this->assertInstanceOf(ConnectionsCommand::class, $command);
 
-        // 避免交互式终端检查
-        $command->executeCallback = fn (\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output): int => 0;
-
-        $tester = new CommandTester($command);
-        $tester->execute(['--count' => '1']);
-
-        $this->assertSame(0, $tester->getStatusCode());
+        // 验证 count 选项存在
+        $definition = $command->getDefinition();
+        $this->assertTrue($definition->hasOption('count'));
+        $this->assertSame('c', $definition->getOption('count')->getShortcut());
     }
 }
